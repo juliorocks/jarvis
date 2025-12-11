@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { LogoutButton } from "@/components/layout/logout-button";
 import { FinanceProvider } from "@/hooks/use-finance";
+import { JarvisAssistant } from "@/components/jarvis/assistant-button";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
     return (
@@ -29,6 +30,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     {children}
                 </main>
 
+                <JarvisAssistant />
                 <BottomNav />
             </div>
         </FinanceProvider>

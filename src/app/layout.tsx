@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 // NOTE: Using standard font loading to avoid build errors with 'next/font' in paths with special characters (#)
 // Font: Inter
@@ -32,6 +33,7 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         {children}
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

@@ -112,13 +112,13 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
             description,
             date,
             category_id: categoryId,
-            wallet_id: (type === 'expense' && paymentMethod === 'credit_card') ? undefined : walletId,
-            credit_card_id: (type === 'expense' && paymentMethod === 'credit_card') ? creditCardId : undefined,
+            wallet_id: (type === 'expense' && paymentMethod === 'credit_card') ? null : (walletId || null),
+            credit_card_id: (type === 'expense' && paymentMethod === 'credit_card') ? (creditCardId || null) : null,
             status: (type === 'expense' && paymentMethod === 'credit_card') ? 'pending' : 'completed',
             payment_method: finalMethod
         };
 
-        if (initialData) {
+        if (initialData && initialData.id) {
             result = await updateTransaction({
                 ...initialData,
                 ...payload
@@ -146,12 +146,14 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
         window.location.reload();
     };
 
+    const isEditMode = !!(initialData && initialData.id);
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>{initialData ? "Editar Transação" : "Nova Transação"}</DialogTitle>
-                    <DialogDescription>{initialData ? "Atualize os dados da transação." : "Adicione uma receita ou despesa."}</DialogDescription>
+                    <DialogTitle>{isEditMode ? "Editar Transação" : "Nova Transação"}</DialogTitle>
+                    <DialogDescription>{isEditMode ? "Atualize os dados da transação." : "Adicione uma receita ou despesa."}</DialogDescription>
                 </DialogHeader>
 
                 {wallets.length === 0 ? (

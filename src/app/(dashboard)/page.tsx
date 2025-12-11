@@ -11,6 +11,8 @@ import { useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { format, subDays, isSameDay, startOfDay, startOfMonth, startOfYear, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { JarvisAssistant } from "@/components/jarvis/assistant-button";
+import { FinanceDashboard } from "@/components/finance/finance-dashboard";
 
 export default function DashboardPage() {
     const time = new Date().getHours();
@@ -262,6 +264,8 @@ export default function DashboardPage() {
                     </Card>
                 </div>
             </div>
+
+
         </div>
     );
 }
