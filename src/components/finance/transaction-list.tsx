@@ -8,10 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { Transaction } from "@/types/finance";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function TransactionList() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const supabase = createClient();
 
     useEffect(() => {
@@ -29,7 +31,13 @@ export function TransactionList() {
         }
 
         loadTransactions();
-    }, []);
+    }, [supabase]); // Added dependency
+
+    const sortedTransactions = [...transactions].sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
 
     if (loading) {
         return <div className="text-center p-4 text-muted-foreground">Carregando finanças...</div>;
@@ -46,7 +54,19 @@ export function TransactionList() {
 
     return (
         <div className="space-y-4">
-            {transactions.map((t) => (
+            <div className="flex justify-end">
+                <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Ordenar por" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="desc">Mais Recentes</SelectItem>
+                        <SelectItem value="asc">Mais Antigas</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            {sortedTransactions.map((t) => (
                 <Card key={t.id} className="overflow-hidden transition-all hover:shadow-md">
                     <CardContent className="p-0 flex items-center justify-between">
                         <div className="flex items-center gap-4 p-4">
