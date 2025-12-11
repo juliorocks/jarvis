@@ -72,8 +72,8 @@ export function useEvents() {
                 is_google: true // Flag to identify origin (could be useful for UI)
             } as CalendarEvent));
 
-            const uniqueGoogleEvents = googleEvents.filter(g =>
-                !localEvents.some(l =>
+            const uniqueGoogleEvents = googleEvents.filter((g: CalendarEvent) =>
+                !localEvents.some((l: CalendarEvent) =>
                     l.title === g.title &&
                     // Compare times loosely (within 1 minute) or exact? 
                     // Exact match is safer if we control creation.
@@ -90,7 +90,7 @@ export function useEvents() {
         } finally {
             setLoading(false)
         }
-    }, []) // Stable dependency
+    }, [supabase]) // Stable dependency
 
     const createEvent = async (event: Omit<CalendarEvent, 'id'>) => {
         try {
