@@ -33,37 +33,54 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
 
     // Voice Recognition Setup
     const startListening = () => {
-        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            toast.error("Seu navegador não suporta reconhecimento de voz.");
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+
+        if (!SpeechRecognition) {
+            toast.error("Seu navegador não suporta reconhecimento de voz.", {
+                description: "Tente usar o Chrome no Android ou Desktop. O iOS (iPhone) tem suporte limitado.",
+                duration: 5000
+            });
             return;
         }
 
-        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-        const recognition = new SpeechRecognition();
+        try {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
 
-        recognition.lang = 'pt-BR';
-        recognition.continuous = false;
-        recognition.interimResults = false;
+            recognition.onstart = () => {
+                setIsRecording(true);
+                toast.success("Ouvindo...", { duration: 2000 });
+            };
 
-        recognition.onstart = () => {
-            setIsRecording(true);
-        };
+            recognition.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                setTextInput(prev => prev + (prev ? " " : "") + transcript);
+                toast.success("Entendi!");
+            };
 
-        recognition.onresult = (event: any) => {
-            const transcript = event.results[0][0].transcript;
-            setTextInput(prev => prev + (prev ? " " : "") + transcript);
-        };
+            recognition.onerror = (event: any) => {
+                console.error("Speech Error:", event.error);
+                setIsRecording(false);
+                if (event.error === 'not-allowed') {
+                    toast.error("Permissão de microfone negada.");
+                } else if (event.error === 'no-speech') {
+                    toast.warning("Não ouvi nada. Tente novamente.");
+                } else {
+                    toast.error("Erro no reconhecimento de voz: " + event.error);
+                }
+            };
 
-        recognition.onerror = (event: any) => {
-            console.error(event.error);
-            setIsRecording(false);
-        };
+            recognition.onend = () => {
+                setIsRecording(false);
+            };
 
-        recognition.onend = () => {
-            setIsRecording(false);
-        };
-
-        recognition.start();
+            recognition.start();
+        } catch (e) {
+            console.error(e);
+            toast.error("Erro ao iniciar microfone.");
+        }
     };
 
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
