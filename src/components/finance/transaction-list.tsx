@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowDownLeft, ArrowUpRight, CalendarOff } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, CalendarOff, ArrowDownUp } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { Transaction } from "@/types/finance";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export function TransactionList() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -55,15 +55,15 @@ export function TransactionList() {
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
-                <Select value={sortOrder} onValueChange={(v) => setSortOrder(v as 'asc' | 'desc')}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Ordenar por" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="desc">Mais Recentes</SelectItem>
-                        <SelectItem value="asc">Mais Antigas</SelectItem>
-                    </SelectContent>
-                </Select>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+                    className="gap-2 text-xs h-8"
+                >
+                    <ArrowDownUp className="h-3 w-3" />
+                    {sortOrder === 'desc' ? "Mais Recentes" : "Mais Antigas"}
+                </Button>
             </div>
 
             {sortedTransactions.map((t) => (
@@ -79,7 +79,7 @@ export function TransactionList() {
                             <div>
                                 <p className="font-medium">{t.description}</p>
                                 <p className="text-xs text-muted-foreground capitalize">
-                                    {t.category?.name || "Geral"} • {format(new Date(t.date), "dd MMM", { locale: ptBR })}
+                                    {t.category?.name || "Geral"} • {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
                                 </p>
                             </div>
                         </div>
@@ -96,3 +96,4 @@ export function TransactionList() {
         </div>
     );
 }
+

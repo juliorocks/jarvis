@@ -10,19 +10,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         <FinanceProvider>
             <div className="flex min-h-screen flex-col bg-gray-50/50 dark:bg-zinc-950">
                 {/* Desktop Header Placeholder */}
-                <header className="hidden md:flex items-center justify-between border-b px-8 h-16 bg-background/95 backdrop-blur">
-                    <div className="font-bold text-xl tracking-tight">Jarvis</div>
+                <header className="hidden md:flex items-center justify-between px-8 h-16 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm">
+                    <div className="font-bold text-xl tracking-tight text-white">Jarvis</div>
                     <nav className="flex gap-4 text-sm font-medium">
-                        <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
-                        <Link href="/finance" className="text-muted-foreground hover:text-foreground transition-colors">Financeiro</Link>
-                        <Link href="/calendar" className="text-muted-foreground hover:text-foreground transition-colors">Calendário</Link>
+                        <Link href="/" className="text-blue-100 hover:text-white transition-colors">Dashboard</Link>
+                        <Link href="/finance" className="text-blue-100 hover:text-white transition-colors">Financeiro</Link>
+                        <Link href="/calendar" className="text-blue-100 hover:text-white transition-colors">Calendário</Link>
                         <LogoutButton />
                     </nav>
                 </header>
 
                 {/* Mobile Header */}
-                <header className="flex md:hidden items-center justify-between border-b px-4 h-14 bg-background/95 backdrop-blur">
-                    <div className="font-bold text-lg tracking-tight">Jarvis</div>
+                <header className="flex md:hidden items-center justify-between px-4 h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm">
+                    <div className="font-bold text-lg tracking-tight text-white">Jarvis</div>
                     <LogoutButton />
                 </header>
 
