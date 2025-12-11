@@ -13,7 +13,7 @@ import { useEffect } from "react";
 interface TransactionFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    initialData?: Transaction | null;
+    initialData?: Partial<Transaction> | null;
 }
 
 export function TransactionForm({ open, onOpenChange, initialData }: TransactionFormProps) {
@@ -33,11 +33,11 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
     useEffect(() => {
         if (open) {
             if (initialData) {
-                setType(initialData.type);
-                setAmount(initialData.amount.toString());
-                setDescription(initialData.description);
-                setDate(initialData.date);
-                setCategoryId(initialData.category_id);
+                setType(initialData.type || 'expense');
+                setAmount(initialData.amount ? initialData.amount.toString() : "");
+                setDescription(initialData.description || "");
+                setDate(initialData.date || new Date().toISOString().split('T')[0]);
+                setCategoryId(initialData.category_id || "");
 
                 if (initialData.credit_card_id) {
                     setPaymentMethod('credit_card');
