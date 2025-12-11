@@ -6,9 +6,9 @@ import { Mic, Image as ImageIcon, Send, X, Loader2, Sparkles } from "lucide-reac
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useFinance } from "@/hooks/use-finance";
+import { useEvents } from "@/hooks/use-events";
 import { toast } from "sonner";
 import { TransactionForm } from "../finance/transaction-form";
-
 import { cn } from "@/lib/utils";
 
 interface JarvisAssistantProps {
@@ -18,7 +18,6 @@ interface JarvisAssistantProps {
 
 export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
     const [textInput, setTextInput] = useState("");
     const [isRecording, setIsRecording] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -30,6 +29,7 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
     const [showTransactionModal, setShowTransactionModal] = useState(false);
 
     const { familyId } = useFinance();
+    const { createEvent } = useEvents();
 
     // Voice Recognition Setup
     const startListening = () => {
@@ -117,8 +117,31 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
                 setSuggestedTransaction(result.data);
                 setShowTransactionModal(true);
                 setIsOpen(false); // Close assistant
-            } else if (result.action === 'event' || result.action === 'task') {
-                toast.info("Ainda estamos implementando a criação de eventos!", { description: JSON.stringify(result.data) });
+            } else if (result.action === 'event') {
+                // Handle Event Creation
+                try {
+                    const eventData = result.data;
+                    const { error } = await createEvent({
+                        title: eventData.title,
+                        description: eventData.description || "",
+                        start_time: eventData.start,
+                        end_time: eventData.end,
+                        is_all_day: eventData.allDay || false,
+                        location: eventData.location || ""
+                    });
+
+                    if (error) throw error;
+
+                    toast.success("Evento criado com sucesso!", {
+                        description: `${eventData.title} - ${new Date(eventData.start).toLocaleDateString()}`
+                    });
+                    setIsOpen(false);
+                } catch (err) {
+                    console.error(err);
+                    toast.error("Erro ao criar evento.");
+                }
+            } else if (result.action === 'task') {
+                toast.info("Ainda estamos implementando a criação de tarefas!", { description: JSON.stringify(result.data) });
             } else {
                 toast.error("Não entendi o comando. Tente novamente.");
             }
