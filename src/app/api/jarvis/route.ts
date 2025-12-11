@@ -22,13 +22,15 @@ export async function POST(req: Request) {
             Family ID: ${context?.familyId || 'unknown'}
 
             Possible Actions:
-            1. 'transaction': For expenses, incomes, transfers (buying, selling, paying, receiving).
-            2. 'event': For calendar events, appointments, reminders.
+            1. 'transaction': For expenses, incomes, transfers.
+            2. 'event': For creating NEW calendar events.
             3. 'task': For to-do items.
+            4. 'delete_event': For cancelling or removing existing events.
+            5. 'update_event': For rescheduling or changing event details.
 
             Output JSON format only, no markdown:
             {
-                "action": "transaction" | "event" | "task",
+                "action": "transaction" | "event" | "task" | "delete_event" | "update_event",
                 "confidence": number (0-1),
                 "data": { ...specific fields... }
             }
@@ -36,11 +38,22 @@ export async function POST(req: Request) {
             For 'transaction':
             fields: type ('income'|'expense'), amount (number), description (string), category (string guess), date (ISO string YYYY-MM-DD), payment_method (guess: 'credit_card'|'wallet'|'pix').
             
-            For 'event':
+            For 'event' (Create):
             fields: title (string), start (ISO string), end (ISO string), allDay (boolean).
             
             For 'task':
             fields: title (string), due_date (ISO string).
+
+            For 'delete_event':
+            fields: original_reference (string: title or description to find the event), date (optional ISO string if specified, helps disambiguate).
+
+            For 'update_event':
+            fields: original_reference (string), new_title (optional), new_start (optional ISO), new_end (optional ISO).
+
+            Logic Tips:
+            - "cancelar", "excluir", "apagar" -> delete_event
+            - "remarcar", "mudar", "alterar" -> update_event
+            - "agendar", "marcar" -> event (create)
         `;
 
         let rawResponse = "";

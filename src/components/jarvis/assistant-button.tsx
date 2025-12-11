@@ -29,7 +29,7 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
     const [showTransactionModal, setShowTransactionModal] = useState(false);
 
     const { familyId } = useFinance();
-    const { createEvent } = useEvents();
+    const { createEvent, deleteEvent, updateEvent, events } = useEvents();
 
     // Voice Recognition Setup
     const startListening = () => {
@@ -116,9 +116,8 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
             if (result.action === 'transaction') {
                 setSuggestedTransaction(result.data);
                 setShowTransactionModal(true);
-                setIsOpen(false); // Close assistant
+                setIsOpen(false);
             } else if (result.action === 'event') {
-                // Handle Event Creation
                 try {
                     const eventData = result.data;
                     const { error } = await createEvent({
@@ -140,6 +139,41 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
                     console.error(err);
                     toast.error("Erro ao criar evento.");
                 }
+
+            } else if (result.action === 'delete_event') {
+                const searchTitle = result.data.original_reference?.toLowerCase();
+
+                // Find best match: case insensitive title match
+                // We could enhance this with date filtering if 'result.data.date' is present
+                const targetEvent = events.find(e => e.title.toLowerCase().includes(searchTitle));
+
+                if (targetEvent) {
+                    const { error } = await deleteEvent(targetEvent.id);
+                    if (error) throw error;
+                    toast.success(`Evento excluído: ${targetEvent.title}`);
+                    setIsOpen(false);
+                } else {
+                    toast.error(`Não encontrei um evento chamado "${result.data.original_reference}".`);
+                }
+
+            } else if (result.action === 'update_event') {
+                const searchTitle = result.data.original_reference?.toLowerCase();
+                const targetEvent = events.find(e => e.title.toLowerCase().includes(searchTitle));
+
+                if (targetEvent) {
+                    const updates: any = {};
+                    if (result.data.new_title) updates.title = result.data.new_title;
+                    if (result.data.new_start) updates.start_time = result.data.new_start;
+                    if (result.data.new_end) updates.end_time = result.data.new_end;
+
+                    const { error } = await updateEvent(targetEvent.id, updates);
+                    if (error) throw error;
+                    toast.success(`Evento atualizado: ${updates.title || targetEvent.title}`);
+                    setIsOpen(false);
+                } else {
+                    toast.error(`Não encontrei o evento para editar.`);
+                }
+
             } else if (result.action === 'task') {
                 toast.info("Ainda estamos implementando a criação de tarefas!", { description: JSON.stringify(result.data) });
             } else {
