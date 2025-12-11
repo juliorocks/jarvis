@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     {children}
                 </main>
 
-                <JarvisAssistant />
+                <JarvisAssistant className="hidden md:flex" />
                 <BottomNav />
             </div>
         </FinanceProvider>

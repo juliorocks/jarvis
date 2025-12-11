@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Calendar, Wallet, Lightbulb, Plus, LucideIcon } from "lucide-react";
+import { Home, Calendar, Wallet, Lightbulb, Sparkles, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { JarvisAssistant } from "@/components/jarvis/assistant-button";
 
 interface NavItem {
     href: string;
@@ -19,7 +20,7 @@ export function BottomNav() {
     const links: NavItem[] = [
         { href: "/", icon: Home, label: "Home" },
         { href: "/calendar", icon: Calendar, label: "Agenda" },
-        { href: "/capture", icon: Plus, label: "Novo", primary: true },
+        { href: "#", icon: Sparkles, label: "Jarvis", primary: true },
         { href: "/finance", icon: Wallet, label: "Finanças" },
         { href: "/brain", icon: Lightbulb, label: "Ideias" },
     ];
@@ -34,16 +35,18 @@ export function BottomNav() {
 
                         if (link.primary) {
                             return (
-                                <div key={link.href} className="relative -top-5">
-                                    <Link href={link.href}>
-                                        <Button
-                                            size="icon"
-                                            className="h-14 w-14 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-transform active:scale-95"
-                                        >
-                                            <Icon className="h-7 w-7" />
-                                            <span className="sr-only">{link.label}</span>
-                                        </Button>
-                                    </Link>
+                                <div key={link.label} className="relative -top-5">
+                                    <JarvisAssistant
+                                        trigger={
+                                            <Button
+                                                size="icon"
+                                                className="h-14 w-14 rounded-full shadow-xl bg-gradient-to-tr from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-transform active:scale-95 border-4 border-background"
+                                            >
+                                                <Icon className="h-6 w-6" />
+                                                <span className="sr-only">{link.label}</span>
+                                            </Button>
+                                        }
+                                    />
                                 </div>
                             );
                         }

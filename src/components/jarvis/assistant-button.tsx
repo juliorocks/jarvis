@@ -9,7 +9,14 @@ import { useFinance } from "@/hooks/use-finance";
 import { toast } from "sonner";
 import { TransactionForm } from "../finance/transaction-form";
 
-export function JarvisAssistant() {
+import { cn } from "@/lib/utils";
+
+interface JarvisAssistantProps {
+    trigger?: React.ReactNode;
+    className?: string;
+}
+
+export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
     const [textInput, setTextInput] = useState("");
@@ -113,14 +120,23 @@ export function JarvisAssistant() {
 
     return (
         <>
-            {/* Floating Trigger Button */}
-            <Button
-                size="icon"
-                className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-to-tr from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-300 z-50"
-                onClick={() => setIsOpen(true)}
-            >
-                <Sparkles className="h-6 w-6 text-white animate-pulse" />
-            </Button>
+            {trigger ? (
+                <div onClick={() => setIsOpen(true)} className={className}>
+                    {trigger}
+                </div>
+            ) : (
+                /* Floating Trigger Button (Default) */
+                <Button
+                    size="icon"
+                    className={cn(
+                        "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-to-tr from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 transition-all duration-300 z-50",
+                        className
+                    )}
+                    onClick={() => setIsOpen(true)}
+                >
+                    <Sparkles className="h-6 w-6 text-white animate-pulse" />
+                </Button>
+            )}
 
             {/* Assistant Dialog */}
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
