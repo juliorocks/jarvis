@@ -215,7 +215,7 @@ export function JarvisAssistant() {
                     initialData={{
                         amount: suggestedTransaction.amount,
                         description: suggestedTransaction.description,
-                        date: suggestedTransaction.date ? new Date(suggestedTransaction.date).toISOString().split('T')[0] : undefined,
+                        date: suggestedTransaction.date ? new Date(suggestedTransaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                         type: suggestedTransaction.type,
                         // Categories might need mapping logic or user selects manually if not exact match
                     }}
