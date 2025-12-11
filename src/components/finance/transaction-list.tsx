@@ -59,7 +59,7 @@ export function TransactionList() {
                             <div>
                                 <p className="font-medium">{t.description}</p>
                                 <p className="text-xs text-muted-foreground capitalize">
-                                    {t.category} • {format(new Date(t.date), "dd MMM", { locale: ptBR })}
+                                    {t.category?.name || "Geral"} • {format(new Date(t.date), "dd MMM", { locale: ptBR })}
                                 </p>
                             </div>
                         </div>
