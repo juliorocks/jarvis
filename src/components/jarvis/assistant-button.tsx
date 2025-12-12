@@ -29,7 +29,8 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
     const [showTransactionModal, setShowTransactionModal] = useState(false);
 
     const { familyId } = useFinance();
-    const { createEvent, deleteEvent, updateEvent, events } = useEvents();
+    const { familyId } = useFinance();
+    const { createEvent, deleteEvent, updateEvent, events, refreshEvents } = useEvents();
 
     // Voice Recognition Setup
     const startListening = () => {
@@ -102,7 +103,11 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
             const payload = {
                 type: selectedImage ? 'image' : 'text',
                 content: selectedImage || textInput,
-                context: { familyId }
+                context: {
+                    familyId,
+                    currentDate: new Date().toLocaleString(),
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
             };
 
             const response = await fetch('/api/jarvis', {
@@ -132,8 +137,9 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
                     if (error) throw error;
 
                     toast.success("Evento criado com sucesso!", {
-                        description: `${eventData.title} - ${new Date(eventData.start).toLocaleDateString()}`
+                        description: `${eventData.title} em ${new Date(eventData.start).toLocaleString()}`
                     });
+                    refreshEvents();
                     setIsOpen(false);
                 } catch (err) {
                     console.error(err);
@@ -151,6 +157,7 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
                     const { error } = await deleteEvent(targetEvent.id);
                     if (error) throw error;
                     toast.success(`Evento excluído: ${targetEvent.title}`);
+                    refreshEvents();
                     setIsOpen(false);
                 } else {
                     toast.error(`Não encontrei um evento chamado "${result.data.original_reference}".`);
@@ -169,6 +176,7 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
                     const { error } = await updateEvent(targetEvent.id, updates);
                     if (error) throw error;
                     toast.success(`Evento atualizado: ${updates.title || targetEvent.title}`);
+                    refreshEvents();
                     setIsOpen(false);
                 } else {
                     toast.error(`Não encontrei o evento para editar.`);

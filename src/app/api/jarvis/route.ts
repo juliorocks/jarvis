@@ -18,7 +18,8 @@ export async function POST(req: Request) {
             Analyze the user input and extract structured data to perform an action.
             
             Current Context: 
-            Date: ${new Date().toISOString()}
+            Date: ${context?.currentDate || new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}
+            Timezone: ${context?.timezone || 'America/Sao_Paulo'}
             Family ID: ${context?.familyId || 'unknown'}
 
             Possible Actions:
