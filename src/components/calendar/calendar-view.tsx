@@ -433,40 +433,31 @@ export function CalendarView() {
                                             <div className="flex items-center justify-between">
                                                 <CardTitle className="text-base flex flex-wrap items-center gap-2 leading-tight">
                                                     <span className="break-words">{event.title}</span>
-                                                    {event.is_transaction && (
-                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${event.color_class}`}>
-                                                            Financeiro
-                                                        </span>
-                                                    )}
                                                 </CardTitle>
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex items-center text-sm text-muted-foreground mr-2">
                                                         <Clock className="mr-1 h-3 w-3" />
                                                         {format(new Date(event.start_time), "HH:mm")} - {format(new Date(event.end_time), "HH:mm")}
                                                     </div>
-                                                    {!event.is_transaction && (
-                                                        <>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-blue-500"
-                                                                onClick={() => openEditDialog(event)}
-                                                            >
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-red-500"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    deleteEvent(event.id);
-                                                                }}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </>
-                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-blue-500"
+                                                        onClick={() => openEditDialog(event)}
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            deleteEvent(event.id);
+                                                        }}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
                                                 </div>
                                             </div>
                                             {event.location && (
@@ -535,13 +526,11 @@ export function CalendarView() {
                                         {dayEvents.map(event => (
                                             <div
                                                 key={event.id}
-                                                className={`p-2 rounded text-xs border cursor-pointer ${event.is_transaction
-                                                    ? event.color_class
-                                                    : event.is_google
-                                                        ? "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
-                                                        : "bg-card border-border hover:bg-accent hover:text-accent-foreground shadow-sm"
+                                                className={`p-2 rounded text-xs border cursor-pointer ${event.is_google
+                                                    ? "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
+                                                    : "bg-card border-border hover:bg-accent hover:text-accent-foreground shadow-sm"
                                                     }`}
-                                                onClick={() => !event.is_transaction && openEditDialog(event)}
+                                                onClick={() => openEditDialog(event)}
                                             >
                                                 <div className="font-semibold mb-1 truncate">{event.title}</div>
                                                 <div className="flex items-center text-[10px] opacity-70 mb-1">
@@ -618,15 +607,13 @@ export function CalendarView() {
                                             {dayEvents.slice(0, 3).map(event => (
                                                 <div
                                                     key={event.id}
-                                                    className={`text-[10px] truncate px-1 py-0.5 rounded cursor-pointer ${event.is_transaction
-                                                        ? event.color_class
-                                                        : event.is_google
-                                                            ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                                                            : "bg-primary/10 text-primary hover:bg-primary/20"
+                                                    className={`text-[10px] truncate px-1 py-0.5 rounded cursor-pointer ${event.is_google
+                                                        ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                                        : "bg-primary/10 text-primary hover:bg-primary/20"
                                                         }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        !event.is_transaction && openEditDialog(event);
+                                                        openEditDialog(event);
                                                     }}
                                                     title={event.title}
                                                 >
