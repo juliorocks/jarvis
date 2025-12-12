@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFinance, Wallet } from "@/hooks/use-finance";
+import { getBankLogo } from "@/lib/bank-logos";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
     AlertDialog,
@@ -102,40 +103,54 @@ export function WalletList() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {wallets.map((wallet) => (
-                            <div key={wallet.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                                <div>
-                                    <p className="font-medium">{wallet.name}</p>
-                                    <p className="text-xs text-muted-foreground capitalize">
-                                        {/* Translate types */}
-                                        {wallet.type === 'checking' ? 'Corrente' : wallet.type === 'investment' ? 'Investimento' : 'Dinheiro'}
-                                    </p>
+                        {wallets.map((wallet) => {
+                            const logo = getBankLogo(wallet.name);
+                            return (
+                                <div key={wallet.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                                    <div className="flex items-center gap-3">
+                                        {logo ? (
+                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full overflow-hidden bg-white border flex items-center justify-center p-1">
+                                                <img src={logo} alt={wallet.name} className="h-full w-full object-contain" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-muted flex items-center justify-center">
+                                                <WalletIcon className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <p className="font-medium">{wallet.name}</p>
+                                            <p className="text-xs text-muted-foreground capitalize">
+                                                {/* Translate types */}
+                                                {wallet.type === 'checking' ? 'Corrente' : wallet.type === 'investment' ? 'Investimento' : 'Dinheiro'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <p className="font-medium text-sm">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(wallet.balance)}
+                                        </p>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => openDialog(wallet)}>
+                                                    <Edit className="mr-2 h-4 w-4" />
+                                                    Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(wallet.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Excluir
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <p className="font-medium text-sm">
-                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(wallet.balance)}
-                                    </p>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => openDialog(wallet)}>
-                                                <Edit className="mr-2 h-4 w-4" />
-                                                Editar
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(wallet.id)}>
-                                                <Trash2 className="mr-2 h-4 w-4" />
-                                                Excluir
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </CardContent>

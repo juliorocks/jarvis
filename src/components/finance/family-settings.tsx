@@ -97,6 +97,15 @@ export function FamilySettings({ open, onOpenChange }: { open: boolean, onOpenCh
         });
     };
 
+    const handleTogglePermission = async (userId: string, currentStatus: boolean) => {
+        try {
+            await toggleMemberPermission(userId, !currentStatus);
+        } catch (error) {
+            console.error("Error toggling permission:", error);
+            alert("Erro ao alterar permissão.");
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-lg">
@@ -144,52 +153,6 @@ export function FamilySettings({ open, onOpenChange }: { open: boolean, onOpenCh
                 </DialogHeader>
 
                 <div className="space-y-6 py-2">
-                    {/* Profile Section */}
-                    <div className="p-3 border rounded-md bg-muted/20">
-                        <div className="flex justify-between items-center mb-2">
-                            <h4 className="text-sm font-medium flex items-center gap-2">
-                                <Users className="h-4 w-4" /> Meu Perfil
-                            </h4>
-                            <Button variant="link" size="sm" onClick={() => setIsEditingProfile(!isEditingProfile)} className="h-auto p-0">
-                                {isEditingProfile ? "Cancelar" : "Editar Nome"}
-                            </Button>
-                        </div>
-
-                        {isEditingProfile ? (
-                            <div className="flex gap-2 mb-2 animate-in fade-in slide-in-from-top-1">
-                                <Input
-                                    placeholder="Seu nome completo"
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    className="h-8"
-                                />
-                                <Button size="sm" onClick={handleUpdateProfile} disabled={loading} className="h-8">Salvar</Button>
-                            </div>
-                        ) : (
-                            <div className="mb-2">
-                                <p className="text-sm text-muted-foreground">
-                                    Exibido como: <span className="font-medium text-foreground">
-                                        {/* Find self or updated name */}
-                                        {(isEditingProfile ? newName : null) || "..."}
-                                        {/* We rely on refresh to show actual name in member list below */}
-                                    </span>
-                                </p>
-                            </div>
-                        )}
-
-                        {!isOwner && (
-                            <Button
-                                variant="destructive"
-                                size="sm"
-                                className="w-full mt-2 h-8"
-                                onClick={handleLeaveFamily}
-                            >
-                                <LogOut className="h-3 w-3 mr-2" />
-                                Sair da Família
-                            </Button>
-                        )}
-                    </div>
-
                     {/* Invite Section (Owners Only) */}
                     {isOwner && (
                         <div className="space-y-2">
@@ -241,7 +204,7 @@ export function FamilySettings({ open, onOpenChange }: { open: boolean, onOpenCh
                                                             variant={member.can_view_all ? "secondary" : "ghost"}
                                                             size="sm"
                                                             className="h-8 px-2 text-xs gap-1"
-                                                            onClick={() => toggleMemberPermission(member.user_id, !member.can_view_all)}
+                                                            onClick={() => handleTogglePermission(member.user_id, !!member.can_view_all)}
                                                         >
                                                             {member.can_view_all ? (
                                                                 <>
@@ -301,10 +264,7 @@ export function FamilySettings({ open, onOpenChange }: { open: boolean, onOpenCh
                     )}
                 </div>
 
-                <DialogFooter className="flex-col sm:justify-between sm:flex-row gap-2">
-                    <div className="text-[10px] text-muted-foreground font-mono self-start sm:self-center">
-                        ID: {familyId} | Membros: {familyMembers.length}
-                    </div>
+                <DialogFooter className="flex-col sm:justify-end sm:flex-row gap-2">
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
                 </DialogFooter>
             </DialogContent>

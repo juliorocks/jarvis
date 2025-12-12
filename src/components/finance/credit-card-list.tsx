@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useFinance } from "@/hooks/use-finance";
+import { getBankLogo } from "@/lib/bank-logos";
 
 export function CreditCardList() {
     const { creditCards, addCreditCard } = useFinance();
@@ -99,24 +100,38 @@ export function CreditCardList() {
                     </div>
                 ) : (
                     <div className="space-y-4">
-                        {creditCards.map((card) => (
-                            <div key={card.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                                <div>
-                                    <p className="font-medium">{card.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Fecha dia {card.closing_day} • Vence dia {card.due_day}
-                                    </p>
+                        {creditCards.map((card) => {
+                            const logo = getBankLogo(card.name);
+                            return (
+                                <div key={card.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                                    <div className="flex items-center gap-3">
+                                        {logo ? (
+                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full overflow-hidden bg-white border flex items-center justify-center p-1">
+                                                <img src={logo} alt={card.name} className="h-full w-full object-contain" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-muted flex items-center justify-center">
+                                                <CreditCardIcon className="h-5 w-5 text-muted-foreground" />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <p className="font-medium">{card.name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Fecha dia {card.closing_day} • Vence dia {card.due_day}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-medium text-sm">
+                                            Limite: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.limit_amount)}
+                                        </p>
+                                        <p className="text-sm font-bold text-red-600">
+                                            Fatura: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.current_invoice || 0)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-medium text-sm">
-                                        Limite: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.limit_amount)}
-                                    </p>
-                                    <p className="text-sm font-bold text-red-600">
-                                        Fatura: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.current_invoice || 0)}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </CardContent>
