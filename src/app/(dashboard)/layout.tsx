@@ -17,14 +17,23 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
                     {/* Mobile Header */}
-                    <header className="flex md:hidden items-center justify-between px-4 h-14 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-sm shrink-0">
-                        <div className="font-bold text-lg tracking-tight text-white">Jarvis</div>
-                        <LogoutButton />
+                    <header className="flex md:hidden items-center justify-between px-4 h-16 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shrink-0 z-10 sticky top-0">
+                        <div className="font-bold text-xl tracking-tight text-white flex items-center gap-2">
+                            <span className="bg-white/20 p-1.5 rounded-lg">🤖</span>
+                            Jarvis
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Link href="/profile" className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                                <span className="sr-only">Perfil</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                            </Link>
+                            <LogoutButton />
+                        </div>
                     </header>
 
                     {/* Main Content Area */}
-                    <main className="flex-1 overflow-y-auto p-4 md:p-8 animate-in fade-in duration-500">
-                        <div className="container mx-auto max-w-5xl space-y-6 md:space-y-8 pb-20 md:pb-0">
+                    <main className="flex-1 overflow-y-auto p-3 md:p-6 animate-in fade-in duration-500 bg-gray-50/50 dark:bg-zinc-950">
+                        <div className="container mx-auto max-w-5xl space-y-4 md:space-y-6 pb-24 md:pb-0">
                             {children}
                         </div>
                     </main>

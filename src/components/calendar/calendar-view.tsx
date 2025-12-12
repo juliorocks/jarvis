@@ -209,26 +209,7 @@ export function CalendarView() {
         <Tabs defaultValue="day" className="w-full space-y-6">
 
             {/* AI Analysis Section */}
-            {aiInsights && (
-                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-lg">
-                            <Sparkles className="h-5 w-5" />
-                            Insights da Agenda
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid md:grid-cols-2 gap-4 pt-0">
-                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-                            <h4 className="font-semibold text-sm mb-1 text-blue-600 dark:text-blue-400">Resumo do Dia</h4>
-                            <p className="text-sm text-muted-foreground">{aiInsights.dailyAnalysis}</p>
-                        </div>
-                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-                            <h4 className="font-semibold text-sm mb-1 text-indigo-600 dark:text-indigo-400">Visão Semanal</h4>
-                            <p className="text-sm text-muted-foreground">{aiInsights.weeklyAnalysis}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+
 
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <TabsList className="w-full md:w-auto h-auto p-1 grid grid-cols-4 md:flex">
@@ -689,6 +670,30 @@ export function CalendarView() {
                     </CardContent>
                 </Card>
             </TabsContent>
+
+            {/* AI Analysis Section (Moved to Bottom) */}
+            {
+                aiInsights && (
+                    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-none shadow-md">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-lg">
+                                <Sparkles className="h-5 w-5" />
+                                Insights da Agenda
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid md:grid-cols-2 gap-4">
+                            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                                <h4 className="font-semibold text-sm mb-1 text-blue-600 dark:text-blue-400">Resumo do Dia</h4>
+                                <p className="text-sm text-muted-foreground">{aiInsights.dailyAnalysis}</p>
+                            </div>
+                            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                                <h4 className="font-semibold text-sm mb-1 text-indigo-600 dark:text-indigo-400">Visão Semanal</h4>
+                                <p className="text-sm text-muted-foreground">{aiInsights.weeklyAnalysis}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )
+            }
         </Tabs >
     );
 }
