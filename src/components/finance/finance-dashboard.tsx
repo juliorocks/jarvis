@@ -121,8 +121,10 @@ export function FinanceDashboard() {
 
         const categoryMap: Record<string, number> = {};
         currentMonthExpenses.forEach(t => {
-            const cat = t.category || 'Outros';
-            categoryMap[cat] = (categoryMap[cat] || 0) + t.amount;
+            // t.category is likely an object from the join, we need the name
+            // If it's a string (old data?), handle that too just in case, though type says object
+            const catName = t.category?.name || 'Outros';
+            categoryMap[catName] = (categoryMap[catName] || 0) + t.amount;
         });
 
         const COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#a05195', '#d45087'];
