@@ -71,44 +71,44 @@ export function FinanceDashboard() {
     const sortedTransactions = [...transactions].sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
-        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-        // Chart Logic (Area Chart - Evolution)
-        const chartData = useMemo(() => {
-            const now = new Date();
-            if (chartFilter === 'year') {
-                const months = eachMonthOfInterval({ start: startOfYear(now), end: endOfYear(now) });
-                return months.map(month => {
-                    const monthTrans = transactions.filter(t => isSameMonth(new Date(t.date), month));
-                    const receita = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-                    const despesa = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-                    return {
-                        name: format(month, 'MMM', { locale: ptBR }),
-                        receita,
-                        despesa
-                    };
-                });
-            } else {
-                let start = startOfMonth(now);
-                let end = endOfMonth(now);
-                if (chartFilter === 'week') {
-                    start = startOfWeek(now);
-                    end = endOfWeek(now);
-                }
-                const days = eachDayOfInterval({ start, end });
-                return days.map(day => {
-                    const dateStr = format(day, 'yyyy-MM-dd');
-                    const dayTrans = transactions.filter(t => t.date === dateStr);
-                    const receita = dayTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-                    const despesa = dayTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-                    return {
-                        name: format(day, 'dd'),
-                        fullDate: format(day, 'dd/MM'),
-                        receita,
-                        despesa
-                    };
-                });
+    });
+
+    // Chart Logic (Area Chart - Evolution)
+    const chartData = useMemo(() => {
+        const now = new Date();
+        if (chartFilter === 'year') {
+            const months = eachMonthOfInterval({ start: startOfYear(now), end: endOfYear(now) });
+            return months.map(month => {
+                const monthTrans = transactions.filter(t => isSameMonth(new Date(t.date), month));
+                const receita = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+                const despesa = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+                return {
+                    name: format(month, 'MMM', { locale: ptBR }),
+                    receita,
+                    despesa
+                };
+            });
+        } else {
+            let start = startOfMonth(now);
+            let end = endOfMonth(now);
+            if (chartFilter === 'week') {
+                start = startOfWeek(now);
+                end = endOfWeek(now);
             }
-        }, [transactions, chartFilter]);
+            const days = eachDayOfInterval({ start, end });
+            return days.map(day => {
+                const dateStr = format(day, 'yyyy-MM-dd');
+                const dayTrans = transactions.filter(t => t.date === dateStr);
+                const receita = dayTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+                const despesa = dayTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+                return {
+                    name: format(day, 'dd'),
+                    fullDate: format(day, 'dd/MM'),
+                    receita,
+                    despesa
+                };
+            });
+        }
     }, [transactions, chartFilter]);
 
     // Category Pie Chart Logic
