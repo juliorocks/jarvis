@@ -71,6 +71,7 @@ export function FinanceDashboard() {
     const sortedTransactions = [...transactions].sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
+        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
     // Chart Logic (Area Chart - Evolution)
