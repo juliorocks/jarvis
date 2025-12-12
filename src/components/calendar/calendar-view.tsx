@@ -122,85 +122,84 @@ export function CalendarView() {
                     <TabsTrigger value="year">Ano</TabsTrigger>
                 </TabsList>
                 <div className="flex items-center gap-2 self-end md:self-auto">
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button onClick={openNewDialog}>
-                                    <Plus className="mr-2 h-4 w-4" /> Novo Evento
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>{editingEventId ? "Editar Evento" : "Adicionar Novo Evento"}</DialogTitle>
-                                    <DialogDescription>
-                                        {editingEventId ? "Edite os detalhes do compromisso." : `Crie um novo compromisso para ${date ? format(date, "d 'de' MMMM", { locale: ptBR }) : "esta data"}.`}
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button onClick={openNewDialog}>
+                                <Plus className="mr-2 h-4 w-4" /> Novo Evento
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>{editingEventId ? "Editar Evento" : "Adicionar Novo Evento"}</DialogTitle>
+                                <DialogDescription>
+                                    {editingEventId ? "Edite os detalhes do compromisso." : `Crie um novo compromisso para ${date ? format(date, "d 'de' MMMM", { locale: ptBR }) : "esta data"}.`}
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="title">Título</Label>
+                                    <Input
+                                        id="title"
+                                        value={newEvent.title}
+                                        onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                                        placeholder="Reunião de Projeto"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="date">Data</Label>
+                                    <Input
+                                        id="date"
+                                        type="date"
+                                        value={newEvent.date}
+                                        onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
                                     <div className="grid gap-2">
-                                        <Label htmlFor="title">Título</Label>
+                                        <Label htmlFor="start">Início</Label>
                                         <Input
-                                            id="title"
-                                            value={newEvent.title}
-                                            onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                                            placeholder="Reunião de Projeto"
+                                            id="start"
+                                            type="time"
+                                            value={newEvent.startTime}
+                                            onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="date">Data</Label>
+                                        <Label htmlFor="end">Fim</Label>
                                         <Input
-                                            id="date"
-                                            type="date"
-                                            value={newEvent.date}
-                                            onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="start">Início</Label>
-                                            <Input
-                                                id="start"
-                                                type="time"
-                                                value={newEvent.startTime}
-                                                onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <Label htmlFor="end">Fim</Label>
-                                            <Input
-                                                id="end"
-                                                type="time"
-                                                value={newEvent.endTime}
-                                                onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="location">Local</Label>
-                                        <Input
-                                            id="location"
-                                            value={newEvent.location}
-                                            onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                                            placeholder="Google Meet"
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="description">Descrição</Label>
-                                        <Textarea
-                                            id="description"
-                                            value={newEvent.description}
-                                            onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                                            placeholder="Detalhes do evento..."
+                                            id="end"
+                                            type="time"
+                                            value={newEvent.endTime}
+                                            onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
                                         />
                                     </div>
                                 </div>
-                                <DialogFooter>
-                                    <Button onClick={handleCreateEvent} disabled={isSaving}>
-                                        {isSaving ? "Salvando..." : "Salvar Evento"}
-                                    </Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="location">Local</Label>
+                                    <Input
+                                        id="location"
+                                        value={newEvent.location}
+                                        onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                                        placeholder="Google Meet"
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="description">Descrição</Label>
+                                    <Textarea
+                                        id="description"
+                                        value={newEvent.description}
+                                        onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                                        placeholder="Detalhes do evento..."
+                                    />
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button onClick={handleCreateEvent} disabled={isSaving}>
+                                    {isSaving ? "Salvando..." : "Salvar Evento"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 
