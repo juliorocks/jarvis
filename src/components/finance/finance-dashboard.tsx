@@ -114,13 +114,13 @@ export function FinanceDashboard() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Receitas (Mês)</CardTitle>
-                        <ArrowUpCircle className="h-4 w-4 text-green-500" />
+                        <ArrowUpCircle className="h-4 w-4 text-[#5cd36b]" />
                     </CardHeader>
                     <CardContent>
                         {loading ? (
                             <div className="h-8 w-32 bg-muted animate-pulse rounded-md" />
                         ) : (
-                            <div className="text-2xl font-bold text-green-600">
+                            <div className="text-2xl font-bold text-[#5cd36b]">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth)}
                             </div>
                         )}
@@ -129,13 +129,13 @@ export function FinanceDashboard() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Despesas (Mês)</CardTitle>
-                        <ArrowDownCircle className="h-4 w-4 text-red-500" />
+                        <ArrowDownCircle className="h-4 w-4 text-[#e14948]" />
                     </CardHeader>
                     <CardContent>
                         {loading ? (
                             <div className="h-8 w-32 bg-muted animate-pulse rounded-md" />
                         ) : (
-                            <div className="text-2xl font-bold text-red-600">
+                            <div className="text-2xl font-bold text-[#e14948]">
                                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth)}
                             </div>
                         )}
@@ -178,66 +178,71 @@ export function FinanceDashboard() {
                         <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
                     ) : (
                         <div className="divide-y">
-                            {sortedTransactions.map((t) => (
-                                <div
-                                    key={t.id}
-                                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                                    onClick={() => handleEdit(t)}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                                            }`}>
-                                            {t.credit_card_id || t.payment_method === 'credit' ? (
-                                                <CreditCard className="h-5 w-5" />
-                                            ) : t.payment_method === 'pix' ? (
-                                                <QrCode className="h-5 w-5" />
-                                            ) : (
-                                                <Banknote className="h-5 w-5" />
-                                            )}
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="font-medium leading-none">{t.description}</p>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
-                                                {t.profiles && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full inline-flex items-center">
-                                                            {t.profiles.full_name?.split(' ')[0] || t.profiles.email?.split('@')[0] || "Desconhecido"}
-                                                        </span>
-                                                    </>
+                            {sortedTransactions.map((t) => {
+                                let bgClass = 'bg-[#92d5b4]'; // Default / Money
+                                if (t.credit_card_id || t.payment_method === 'credit') bgClass = 'bg-[#97bfcb]';
+                                else if (t.payment_method === 'pix') bgClass = 'bg-[#b49aca]';
+
+                                return (
+                                    <div
+                                        key={t.id}
+                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                                        onClick={() => handleEdit(t)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${bgClass}`}>
+                                                {t.credit_card_id || t.payment_method === 'credit' ? (
+                                                    <CreditCard className="h-5 w-5" />
+                                                ) : t.payment_method === 'pix' ? (
+                                                    <QrCode className="h-5 w-5" />
+                                                ) : (
+                                                    <Banknote className="h-5 w-5" />
                                                 )}
-                                            </p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="font-medium leading-none">{t.description}</p>
+                                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                                    {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
+                                                    {t.profiles && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full inline-flex items-center">
+                                                                {t.profiles.full_name?.split(' ')[0] || t.profiles.email?.split('@')[0] || "Desconhecido"}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`text-sm ${t.type === 'income' ? 'text-[#5cd36b]' : 'text-[#e14948]'}`}>
+                                                {t.type === 'income' ? '+' : '-'}
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}
+                                            </div>
+                                            <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleEdit(t)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Editar
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(t.id)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Excluir
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className={`text-sm ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                                            {t.type === 'income' ? '+' : '-'}
-                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}
-                                        </div>
-                                        <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEdit(t)}>
-                                                        <Edit className="mr-2 h-4 w-4" />
-                                                        Editar
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(t.id)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Excluir
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </CardContent>

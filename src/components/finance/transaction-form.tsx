@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useFinance, Wallet, Transaction } from "@/hooks/use-finance";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useEffect } from "react";
+import { Trash2 } from "lucide-react";
 
 interface TransactionFormProps {
     open: boolean;
@@ -17,7 +18,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ open, onOpenChange, initialData }: TransactionFormProps) {
-    const { addTransaction, updateTransaction, wallets, categories, creditCards, addWallet, addCategory } = useFinance();
+    const { addTransaction, updateTransaction, deleteTransaction, wallets, categories, creditCards, addWallet, addCategory } = useFinance();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -146,6 +147,22 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
         window.location.reload();
     };
 
+    const handleDelete = async () => {
+        if (!initialData?.id) return;
+        if (!confirm("Tem certeza que deseja excluir esta transação?")) return;
+
+        setLoading(true);
+        const { error } = await deleteTransaction(initialData.id);
+        setLoading(false);
+
+        if (error) {
+            alert("Erro ao excluir.");
+        } else {
+            onOpenChange(false);
+            window.location.reload();
+        }
+    };
+
     const isEditMode = !!(initialData && initialData.id);
 
     return (
@@ -168,14 +185,14 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
                         <div className="grid grid-cols-2 gap-4">
                             <Button
                                 variant={type === 'income' ? 'default' : 'outline'}
-                                className={type === 'income' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                className={type === 'income' ? 'bg-[#5cd36b] hover:opacity-90' : ''}
                                 onClick={() => setType('income')}
                             >
                                 Receita
                             </Button>
                             <Button
                                 variant={type === 'expense' ? 'default' : 'outline'}
-                                className={type === 'expense' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                className={type === 'expense' ? 'bg-[#e14948] hover:opacity-90' : ''}
                                 onClick={() => setType('expense')}
                             >
                                 Despesa
@@ -231,7 +248,7 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
                             </div>
                         )}
 
-                        {(type === 'income' || paymentMethod === 'wallet') ? (
+                        {(type === 'income' || paymentMethod === 'wallet' || paymentMethod === 'pix') ? (
                             <div className="grid gap-2">
                                 <Label>Carteira</Label>
                                 <Select value={walletId} onValueChange={setWalletId}>
@@ -265,8 +282,6 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
                             <Label>Categoria</Label>
                             <Select value={categoryId} onValueChange={(val) => {
                                 if (val === "new") {
-                                    // Logic handled by dialog below, but for now we keep it simple
-                                    // A better UX might be a "Manage Categories" button or a combobox
                                     const newName = prompt("Nome da nova categoria:");
                                     if (newName) {
                                         setLoading(true);
@@ -300,8 +315,14 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
                     </div>
                 )}
 
-                <DialogFooter>
-                    <Button onClick={handleSubmit} disabled={loading || wallets.length === 0}>
+                <DialogFooter className="gap-2 sm:justify-between">
+                    {isEditMode && (
+                        <Button variant="destructive" onClick={handleDelete} disabled={loading} className="bg-[#e14948] hover:opacity-90">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                        </Button>
+                    )}
+                    <Button onClick={handleSubmit} disabled={loading || wallets.length === 0} className={isEditMode ? "ml-auto" : "w-full sm:w-auto"}>
                         {loading ? "Salvando..." : "Salvar Transação"}
                     </Button>
                 </DialogFooter>
