@@ -9,7 +9,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 export default function DashboardLayout({ children }: { children: ReactNode }) {
     return (
         <FinanceProvider>
-            <div className="flex h-screen overflow-hidden bg-gray-50/50 dark:bg-zinc-950">
+            <div className="flex h-screen overflow-hidden bg-[#F2F4F8] dark:bg-zinc-950">
                 {/* Desktop Sidebar */}
                 <aside className="hidden md:block h-full">
                     <Sidebar />
@@ -32,8 +32,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </header>
 
                     {/* Main Content Area */}
-                    <main className="flex-1 overflow-y-auto p-3 md:p-6 animate-in fade-in duration-500 bg-gray-50/50 dark:bg-zinc-950">
-                        <div className="container mx-auto max-w-5xl space-y-4 md:space-y-6 pb-24 md:pb-0">
+                    <main className="flex-1 overflow-y-auto px-2 py-4 md:p-6 animate-in fade-in duration-500 bg-[#F2F4F8] dark:bg-zinc-950">
+                        <div className="container mx-auto max-w-5xl space-y-4 md:space-y-6 pb-24 md:pb-0 px-0 md:px-2">
                             {children}
                         </div>
                     </main>
