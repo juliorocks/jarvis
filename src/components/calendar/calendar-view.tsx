@@ -10,9 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, MapPin, Clock, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
+import { generateCalendarInsights } from "@/app/actions/finance-ai";
+import { Plus, MapPin, Clock, Trash2, Pencil, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useEvents } from "@/hooks/use-events";
-import { useFinance } from "@/hooks/use-finance";
+import { useFinance } from "@/hooks/use-finance"; // Keeping for safety if other things depend, though likely unused now
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,30 +38,57 @@ export function CalendarView() {
     const [frequency, setFrequency] = useState("weekly");
     const [endDate, setEndDate] = useState("");
 
-    const allEvents = [
-        ...events,
-        ...transactions.map(t => {
-            const [y, m, d] = t.date.split('-').map(Number);
-            const dt = new Date(y, m - 1, d, 12, 0, 0);
-            return {
-                id: `txn-${t.id}`,
-                title: `${t.type === 'income' ? '+' : '-'} ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)} ${t.description}`,
-                start_time: dt.toISOString(),
-                end_time: dt.toISOString(),
-                is_all_day: true,
-                location: 'Financeiro',
-                description: t.category?.name,
-                is_transaction: true,
-                color_class: t.type === 'income' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
-            };
-        })
-    ] as any[];
+    // AI Insights
+    const [aiInsights, setAiInsights] = useState<any>(null);
+
+    const allEvents = events;
 
     const selectedDateEvents = allEvents.filter(event => {
         if (!date) return false;
         const eventDate = new Date(event.start_time);
         return eventDate.toDateString() === date.toDateString();
     });
+
+    // AI Insight Trigger for Calendar
+    useEffect(() => {
+        const checkAndRunAnalysis = async () => {
+            // Only run if we have events
+            // Note: Even if 0 events, AI can say "Agenda livre". usage depends.
+            // But to save tokens, let's wait until we have at least 'events' loaded or checking 'loading'
+            if (loading) return;
+
+            const storedData = localStorage.getItem('calendarAnalysisData');
+            let lastAnalysis = storedData ? JSON.parse(storedData) : null;
+            const now = Date.now();
+            const ONE_DAY = 24 * 60 * 60 * 1000; // Analyzes daily for calendar makes sense
+
+            const isOld = !lastAnalysis || (now - (lastAnalysis.timestamp || 0) > ONE_DAY);
+
+            // If cache is valid
+            if (!isOld && lastAnalysis?.insights) {
+                if (!aiInsights) setAiInsights(lastAnalysis.insights);
+                return;
+            }
+
+            try {
+                // Pass next 7 days events or just all future events
+                const upcomingEvents = events.filter(e => new Date(e.start_time) >= new Date());
+                if (upcomingEvents.length === 0 && !isOld) return; // Don't analyze empty if not forced
+
+                const insights = await generateCalendarInsights(upcomingEvents);
+                setAiInsights(insights);
+
+                localStorage.setItem('calendarAnalysisData', JSON.stringify({
+                    timestamp: now,
+                    insights
+                }));
+            } catch (err) {
+                console.error("Failed to generate calendar insights", err);
+            }
+        };
+
+        checkAndRunAnalysis();
+    }, [events, loading]);
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -179,6 +207,29 @@ export function CalendarView() {
 
     return (
         <Tabs defaultValue="day" className="w-full space-y-6">
+
+            {/* AI Analysis Section */}
+            {aiInsights && (
+                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-100 dark:border-blue-900">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300 text-lg">
+                            <Sparkles className="h-5 w-5" />
+                            Insights da Agenda
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid md:grid-cols-2 gap-4 pt-0">
+                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                            <h4 className="font-semibold text-sm mb-1 text-blue-600 dark:text-blue-400">Resumo do Dia</h4>
+                            <p className="text-sm text-muted-foreground">{aiInsights.dailyAnalysis}</p>
+                        </div>
+                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                            <h4 className="font-semibold text-sm mb-1 text-indigo-600 dark:text-indigo-400">Visão Semanal</h4>
+                            <p className="text-sm text-muted-foreground">{aiInsights.weeklyAnalysis}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <TabsList className="w-full md:w-auto h-auto p-1 grid grid-cols-4 md:flex">
                     <TabsTrigger value="day">Dia</TabsTrigger>

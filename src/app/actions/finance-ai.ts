@@ -1,14 +1,14 @@
 "use server";
 
-import { model } from "@/lib/gemini";
+import { openai } from "@/lib/openai";
 
 export async function generateFinanceInsights(metrics: any) {
     try {
-        if (!process.env.GEMINI_API_KEY) {
+        if (!process.env.OPENAI_API_KEY) {
             return {
-                expensesAnalysis: "Configure a chave de API do Gemini para ver análises.",
-                incomeAnalysis: "Configure a chave de API do Gemini para ver análises.",
-                overallAnalysis: "Configure a chave de API do Gemini para ver análises."
+                expensesAnalysis: "Configure a chave de API da OpenAI para ver análises.",
+                incomeAnalysis: "Configure a chave de API da OpenAI para ver análises.",
+                overallAnalysis: "Configure a chave de API da OpenAI para ver análises."
             };
         }
 
@@ -18,9 +18,9 @@ export async function generateFinanceInsights(metrics: any) {
       ${JSON.stringify(metrics)}
       
       Forneça:
-      1. Uma breve análise das Despesas (foco em categorias altas ou aumento). Max 15 palavras.
-      2. Uma breve análise das Receitas. Max 15 palavras.
-      3. Um resumo geral do mês e uma dica rápida. Max 30 palavras.
+      1. Uma breve análise das Despesas (foco em categorias altas ou aumento). Max 20 palavras.
+      2. Uma breve análise das Receitas. Max 20 palavras.
+      3. Um resumo geral do mês e uma dica rápida. Max 40 palavras.
       
       Responda estritamente em formato JSON:
       {
@@ -30,22 +30,16 @@ export async function generateFinanceInsights(metrics: any) {
       }
     `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
 
-        // Clean code fence if present
-        const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const text = response.choices[0].message.content;
+        if (!text) throw new Error("No response from OpenAI");
 
-        try {
-            return JSON.parse(cleanText);
-        } catch (e) {
-            return {
-                expensesAnalysis: cleanText, // Fallback if not JSON
-                incomeAnalysis: "",
-                overallAnalysis: ""
-            };
-        }
+        return JSON.parse(text);
 
     } catch (error) {
         console.error("AI Error:", error);
@@ -53,6 +47,51 @@ export async function generateFinanceInsights(metrics: any) {
             expensesAnalysis: "Não foi possível gerar análise.",
             incomeAnalysis: "Não foi possível gerar análise.",
             overallAnalysis: "Erro ao consultar o Oráculo."
+        };
+    }
+}
+
+export async function generateCalendarInsights(events: any[]) {
+    try {
+        if (!process.env.OPENAI_API_KEY) {
+            return {
+                dailyAnalysis: "Configure a chave de API da OpenAI.",
+                weeklyAnalysis: "Configure a chave de API da OpenAI."
+            };
+        }
+
+        const prompt = `
+      Atue como um assistente pessoal (Jarvis).
+      Analise os seguintes eventos do calendário (foco na próxima semana):
+      ${JSON.stringify(events.slice(0, 20))}
+      
+      Forneça:
+      1. Um resumo do dia de hoje e o que esperar. Max 20 palavras.
+      2. Uma visão geral da semana (semana cheia/tranquila, principais focos). Max 30 palavras.
+      
+      Responda estritamente em formato JSON:
+      {
+        "dailyAnalysis": "...",
+        "weeklyAnalysis": "..."
+      }
+    `;
+
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            response_format: { type: "json_object" },
+        });
+
+        const text = response.choices[0].message.content;
+        if (!text) throw new Error("No response from OpenAI");
+
+        return JSON.parse(text);
+
+    } catch (error) {
+        console.error("AI Calendar Error:", error);
+        return {
+            dailyAnalysis: "Não foi possível analisar a agenda.",
+            weeklyAnalysis: "Não foi possível analisar a agenda."
         };
     }
 }

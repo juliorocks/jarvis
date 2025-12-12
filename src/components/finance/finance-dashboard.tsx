@@ -112,8 +112,28 @@ export function FinanceDashboard() {
     }, [transactions, chartFilter]);
 
     // AI Insight Trigger
+    // AI Insight Trigger
     useEffect(() => {
-        if (transactions.length > 0 && !aiInsights) {
+        const checkAndRunAnalysis = async () => {
+            if (transactions.length === 0) return;
+
+            const storedData = localStorage.getItem('financeAnalysisData');
+            let lastAnalysis = storedData ? JSON.parse(storedData) : null;
+            const now = Date.now();
+            const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+
+            // Check for large movement (e.g., > R$ 1000 difference)
+            // Note: This is a simple heuristic.
+            const hasLargeMovement = lastAnalysis && Math.abs(totalBalance - (lastAnalysis.lastBalance || 0)) > 1000;
+            const isOld = !lastAnalysis || (now - (lastAnalysis.timestamp || 0) > ONE_WEEK);
+
+            // If we have recent valid insights and no large movement, use cache
+            if (!isOld && !hasLargeMovement && lastAnalysis?.insights) {
+                if (!aiInsights) setAiInsights(lastAnalysis.insights);
+                return;
+            }
+
+            // Otherwise generate new insights
             const metrics = {
                 totalBalance,
                 incomeMonth,
@@ -121,9 +141,24 @@ export function FinanceDashboard() {
                 transactionCount: transactions.length,
                 lastTransaction: transactions[0]?.description
             };
-            generateFinanceInsights(metrics).then(setAiInsights);
-        }
-    }, [transactions, totalBalance, incomeMonth, expenseMonth, aiInsights]);
+
+            // Avoid calling if we just called it (handled by aiInsights check if we wanted, but here we force update if condition met)
+            try {
+                const insights = await generateFinanceInsights(metrics);
+                setAiInsights(insights);
+
+                localStorage.setItem('financeAnalysisData', JSON.stringify({
+                    timestamp: now,
+                    lastBalance: totalBalance,
+                    insights
+                }));
+            } catch (err) {
+                console.error("Failed to generate insights", err);
+            }
+        };
+
+        checkAndRunAnalysis();
+    }, [transactions, totalBalance, incomeMonth, expenseMonth]);
 
     return (
         <div className="space-y-6">
@@ -203,33 +238,35 @@ export function FinanceDashboard() {
 
             {/* Chart Section */}
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                            Evolução Financeira
-                        </CardTitle>
-                        <CardDescription>Acompanhe suas receitas e despesas ao longo do tempo</CardDescription>
-                    </div>
-                    <div className="flex bg-muted rounded-md p-1">
-                        <Button
-                            variant={chartFilter === 'week' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            onClick={() => setChartFilter('week')}
-                            className="h-8 text-xs"
-                        >Semana</Button>
-                        <Button
-                            variant={chartFilter === 'month' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            onClick={() => setChartFilter('month')}
-                            className="h-8 text-xs"
-                        >Mês</Button>
-                        <Button
-                            variant={chartFilter === 'year' ? 'secondary' : 'ghost'}
-                            size="sm"
-                            onClick={() => setChartFilter('year')}
-                            className="h-8 text-xs"
-                        >Ano</Button>
+                <CardHeader>
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                            <CardTitle className="text-xl font-bold flex items-center gap-2">
+                                <TrendingUp className="h-5 w-5 text-primary" />
+                                Evolução Financeira
+                            </CardTitle>
+                            <CardDescription>Acompanhe suas receitas e despesas ao longo do tempo</CardDescription>
+                        </div>
+                        <div className="flex bg-muted rounded-md p-1 self-start md:self-center">
+                            <Button
+                                variant={chartFilter === 'week' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setChartFilter('week')}
+                                className="h-8 text-xs"
+                            >Semana</Button>
+                            <Button
+                                variant={chartFilter === 'month' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setChartFilter('month')}
+                                className="h-8 text-xs"
+                            >Mês</Button>
+                            <Button
+                                variant={chartFilter === 'year' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setChartFilter('year')}
+                                className="h-8 text-xs"
+                            >Ano</Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
