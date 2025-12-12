@@ -102,6 +102,7 @@ export function useEvents() {
                 return { data: null, error: new Error("User not authenticated") }
             }
 
+            let syncWarning = null;
             let googleEventId = null;
 
             // 1. Sync to Google Calendar FIRST to get the ID
@@ -113,10 +114,15 @@ export function useEvents() {
                     const googleRes = await createGoogleCalendarEvent(providerToken, event);
                     if (googleRes.data && googleRes.data.id) {
                         googleEventId = googleRes.data.id;
+                    } else if (googleRes.error) {
+                        syncWarning = "Falha ao sincronizar com Google Calendar. " + googleRes.error;
                     }
+                } else {
+                    syncWarning = "Não conectado ao Google Calendar.";
                 }
             } catch (syncError) {
                 console.error("Google Calendar Sync failed:", syncError);
+                syncWarning = "Erro de conexão com Google Calendar.";
             }
 
             // 2. Create locally with Google ID
@@ -130,10 +136,10 @@ export function useEvents() {
 
             setEvents((prev) => [...prev, data])
 
-            return { data, error: null }
+            return { data, error: null, warning: syncWarning }
         } catch (error) {
             console.error('Error creating event:', error)
-            return { data: null, error }
+            return { data: null, error, warning: null }
         }
     }
 
@@ -174,10 +180,10 @@ export function useEvents() {
             }
 
             setEvents((prev) => prev.filter((e) => e.id !== id))
-            return { error: null }
+            return { error: null, warning: null } // Simplified for now, could add delete warning
         } catch (error) {
             console.error('Error deleting event:', error)
-            return { error }
+            return { error, warning: null }
         }
     }
 
@@ -218,10 +224,10 @@ export function useEvents() {
                 }
             }
 
-            return { data, error: null }
+            return { data, error: null, warning: null }
         } catch (error) {
             console.error('Error updating event:', error)
-            return { data: null, error }
+            return { data: null, error, warning: null }
         }
     }
 

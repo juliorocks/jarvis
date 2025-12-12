@@ -40,7 +40,8 @@ export async function POST(req: Request) {
             fields: type ('income'|'expense'), amount (number), description (string), category (string guess), date (ISO string YYYY-MM-DD), payment_method (guess: 'credit_card'|'wallet'|'pix').
             
             For 'event' (Create):
-            fields: title (string), start (ISO string), end (ISO string), allDay (boolean).
+            fields: title (string), start (ISO string with timezone offset, e.g. "2023-10-27T10:00:00-03:00"), end (ISO string with offset), allDay (boolean).
+            IMPORTANT: Use the Timezone from context to calculate the correct ISO offset. Do not return UTC (Z) unless the user asks for UTC.
             
             For 'task':
             fields: title (string), due_date (ISO string).

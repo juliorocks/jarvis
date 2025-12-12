@@ -29,7 +29,6 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
     const [showTransactionModal, setShowTransactionModal] = useState(false);
 
     const { familyId } = useFinance();
-    const { familyId } = useFinance();
     const { createEvent, deleteEvent, updateEvent, events, refreshEvents } = useEvents();
 
     // Voice Recognition Setup
@@ -125,7 +124,7 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
             } else if (result.action === 'event') {
                 try {
                     const eventData = result.data;
-                    const { error } = await createEvent({
+                    const { error, warning } = await createEvent({
                         title: eventData.title,
                         description: eventData.description || "",
                         start_time: eventData.start,
@@ -136,9 +135,16 @@ export function JarvisAssistant({ trigger, className }: JarvisAssistantProps) {
 
                     if (error) throw error;
 
-                    toast.success("Evento criado com sucesso!", {
-                        description: `${eventData.title} em ${new Date(eventData.start).toLocaleString()}`
-                    });
+                    if (warning) {
+                        toast.warning("Evento criado, mas com alerta:", {
+                            description: warning
+                        });
+                    } else {
+                        toast.success("Evento criado com sucesso!", {
+                            description: `${eventData.title} em ${new Date(eventData.start).toLocaleString()}`
+                        });
+                    }
+
                     refreshEvents();
                     setIsOpen(false);
                 } catch (err) {
