@@ -87,16 +87,21 @@ export function FinanceDashboard() {
             </AlertDialog>
 
             {/* Summary Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            {/* Summary Cards */}
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
                         <Wallet className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)}
-                        </div>
+                        {loading ? (
+                            <div className="h-8 w-32 bg-muted animate-pulse rounded-md" />
+                        ) : (
+                            <div className="text-2xl font-bold">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 <Card>
@@ -105,9 +110,13 @@ export function FinanceDashboard() {
                         <ArrowUpCircle className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth)}
-                        </div>
+                        {loading ? (
+                            <div className="h-8 w-32 bg-muted animate-pulse rounded-md" />
+                        ) : (
+                            <div className="text-2xl font-bold text-green-600">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth)}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 <Card>
@@ -116,9 +125,13 @@ export function FinanceDashboard() {
                         <ArrowDownCircle className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-red-600">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth)}
-                        </div>
+                        {loading ? (
+                            <div className="h-8 w-32 bg-muted animate-pulse rounded-md" />
+                        ) : (
+                            <div className="text-2xl font-bold text-red-600">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth)}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
@@ -132,13 +145,13 @@ export function FinanceDashboard() {
                 </div>
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <h2 className="text-xl font-semibold">Transações Recentes</h2>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={() => setIsFamilyOpen(true)}>
+                    <Button variant="outline" onClick={() => setIsFamilyOpen(true)} className="flex-1 md:flex-none">
                         <Users className="mr-2 h-4 w-4" /> Família
                     </Button>
-                    <Button onClick={() => setIsFormOpen(true)}>
+                    <Button onClick={() => setIsFormOpen(true)} className="flex-1 md:flex-none">
                         <Plus className="mr-2 h-4 w-4" /> Nova Transação
                     </Button>
                 </div>
@@ -170,7 +183,7 @@ export function FinanceDashboard() {
                                         <div className="space-y-1">
                                             <p className="font-medium leading-none">{t.description}</p>
                                             <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                {format(new Date(t.date), "d 'de' MMMM", { locale: ptBR })}
+                                                {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
                                                 {t.profiles && (
                                                     <>
                                                         <span>•</span>

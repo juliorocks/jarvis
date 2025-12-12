@@ -114,16 +114,14 @@ export function CalendarView() {
 
     return (
         <Tabs defaultValue="day" className="w-full space-y-6">
-            <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Agenda</h2>
-                <div className="flex items-center gap-4">
-                    <TabsList>
-                        <TabsTrigger value="day">Dia</TabsTrigger>
-                        <TabsTrigger value="week">Semana</TabsTrigger>
-                        <TabsTrigger value="month">Mês</TabsTrigger>
-                        <TabsTrigger value="year">Ano</TabsTrigger>
-                    </TabsList>
-                    <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <TabsList className="w-full md:w-auto h-auto p-1 grid grid-cols-4 md:flex">
+                    <TabsTrigger value="day">Dia</TabsTrigger>
+                    <TabsTrigger value="week">Semana</TabsTrigger>
+                    <TabsTrigger value="month">Mês</TabsTrigger>
+                    <TabsTrigger value="year">Ano</TabsTrigger>
+                </TabsList>
+                <div className="flex items-center gap-2 self-end md:self-auto">
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
                                 <Button onClick={openNewDialog}>
@@ -530,6 +528,6 @@ export function CalendarView() {
                     </CardContent>
                 </Card>
             </TabsContent>
-        </Tabs>
+        </Tabs >
     );
 }
