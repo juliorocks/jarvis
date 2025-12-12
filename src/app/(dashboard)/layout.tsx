@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
                 <div className="flex-1 flex flex-col h-full overflow-hidden">
                     {/* Mobile Header */}
-                    <header className="flex md:hidden items-center justify-between px-4 h-16 bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md shrink-0 z-10 sticky top-0">
+                    <header className="flex md:hidden items-center justify-between px-4 h-16 bg-[#3B82F6] text-white shadow-none shrink-0 z-10 sticky top-0">
                         <div className="font-bold text-xl tracking-tight text-white flex items-center gap-2">
                             <span className="bg-white/20 p-1.5 rounded-lg">🤖</span>
                             Jarvis
