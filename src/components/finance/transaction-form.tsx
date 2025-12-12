@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useFinance, Wallet, Transaction } from "@/hooks/use-finance";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useEffect } from "react";
+import { Switch } from "@/components/ui/switch";
+import { addDays, addWeeks, addMonths, addYears } from "date-fns";
 import { Trash2 } from "lucide-react";
 
 interface TransactionFormProps {
@@ -18,7 +20,7 @@ interface TransactionFormProps {
 }
 
 export function TransactionForm({ open, onOpenChange, initialData }: TransactionFormProps) {
-    const { addTransaction, updateTransaction, deleteTransaction, wallets, categories, creditCards, addWallet, addCategory } = useFinance();
+    const { addTransaction, addTransactions, updateTransaction, deleteTransaction, wallets, categories, creditCards, addWallet, addCategory } = useFinance();
     const [loading, setLoading] = useState(false);
 
     // Form State
@@ -30,6 +32,11 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
     const [categoryId, setCategoryId] = useState("");
     const [walletId, setWalletId] = useState("");
     const [creditCardId, setCreditCardId] = useState("");
+
+    // Recurrence State
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [frequency, setFrequency] = useState("monthly");
+    const [endDate, setEndDate] = useState("");
 
     useEffect(() => {
         if (open) {
@@ -91,6 +98,12 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
         if (type === 'expense' && (paymentMethod === 'wallet' || paymentMethod === 'pix') && !walletId) { alert("Selecione qual carteira será utilizada."); return; }
         if (type === 'expense' && paymentMethod === 'credit_card' && !creditCardId) { alert("Selecione qual cartão de crédito será utilizado."); return; }
 
+        // Recurrence Validation
+        if (isRecurring && !initialData?.id && !endDate) {
+            alert("Por favor, informe a data final da recorrência.");
+            return;
+        }
+
         const parsedAmount = parseFloat(amount.replace(',', '.'));
         if (isNaN(parsedAmount)) {
             alert("Valor inválido. Por favor, insira um número.");
@@ -105,13 +118,10 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
         else if (paymentMethod === 'pix') finalMethod = 'pix';
         else finalMethod = 'money';
 
-        let result;
-
-        const payload = {
+        const basePayload = {
             type,
             amount: parsedAmount,
             description,
-            date,
             category_id: categoryId,
             wallet_id: (type === 'expense' && paymentMethod === 'credit_card') ? null : (walletId || null),
             credit_card_id: (type === 'expense' && paymentMethod === 'credit_card') ? (creditCardId || null) : null,
@@ -119,13 +129,57 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
             payment_method: finalMethod
         };
 
-        if (initialData && initialData.id) {
-            result = await updateTransaction({
-                ...initialData,
-                ...payload
-            } as any);
+        let result;
+
+        if (isRecurring && !initialData?.id) {
+            // Recurrence Loop
+            const transactionsToAdd: any[] = [];
+
+            // Date Parsing
+            const [y, m, d] = date.split('-').map(Number);
+            let currentDate = new Date(y, m - 1, d);
+
+            const [ey, em, ed] = endDate.split('-').map(Number);
+            const end = new Date(ey, em - 1, ed);
+
+            // Safety limit (e.g. 5 years monthly = 60, daily = 1825. Let's cap at 100 for safety or 365)
+            // Users might want daily for a year. 365.
+            let count = 0;
+            const LIMIT = 366;
+
+            while (currentDate <= end && count < LIMIT) {
+                // Format YYYY-MM-DD manually to avoid timezone issues
+                const year = currentDate.getFullYear();
+                const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+                const day = String(currentDate.getDate()).padStart(2, '0');
+                const dateString = `${year}-${month}-${day}`;
+
+                transactionsToAdd.push({
+                    ...basePayload,
+                    date: dateString
+                });
+
+                // Advance
+                if (frequency === 'daily') currentDate = addDays(currentDate, 1);
+                else if (frequency === 'weekly') currentDate = addWeeks(currentDate, 1);
+                else if (frequency === 'biweekly') currentDate = addWeeks(currentDate, 2);
+                else if (frequency === 'monthly') currentDate = addMonths(currentDate, 1);
+                else if (frequency === 'yearly') currentDate = addYears(currentDate, 1);
+
+                count++;
+            }
+
+            result = await addTransactions(transactionsToAdd);
         } else {
-            result = await addTransaction(payload as any);
+            if (initialData && initialData.id) {
+                result = await updateTransaction({
+                    ...initialData,
+                    ...basePayload,
+                    date
+                } as any);
+            } else {
+                result = await addTransaction({ ...basePayload, date } as any);
+            }
         }
 
         const { error } = result;
@@ -142,6 +196,8 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
         // Reset form
         setAmount("");
         setDescription("");
+        setIsRecurring(false);
+        setEndDate("");
 
         alert("Transação salva com sucesso!");
         window.location.reload();
@@ -227,6 +283,48 @@ export function TransactionForm({ open, onOpenChange, initialData }: Transaction
                                 onChange={(e) => setDate(e.target.value)}
                             />
                         </div>
+
+                        {/* Recurrence Options (Only for new transactions) */}
+                        {!initialData?.id && (
+                            <div className="space-y-4 border p-3 rounded-md bg-muted/20">
+                                <div className="flex items-center space-x-2">
+                                    <Switch
+                                        id="recurring"
+                                        checked={isRecurring}
+                                        onCheckedChange={setIsRecurring}
+                                    />
+                                    <Label htmlFor="recurring">Repetir transação?</Label>
+                                </div>
+
+                                {isRecurring && (
+                                    <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2">
+                                        <div className="grid gap-2">
+                                            <Label>Frequência</Label>
+                                            <Select value={frequency} onValueChange={setFrequency}>
+                                                <SelectTrigger>
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="daily">Diária</SelectItem>
+                                                    <SelectItem value="weekly">Semanal</SelectItem>
+                                                    <SelectItem value="biweekly">Quinzenal</SelectItem>
+                                                    <SelectItem value="monthly">Mensal</SelectItem>
+                                                    <SelectItem value="yearly">Anual</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label>Data Final</Label>
+                                            <Input
+                                                type="date"
+                                                value={endDate}
+                                                onChange={(e) => setEndDate(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {type === 'expense' && (
                             <div className="grid gap-2">

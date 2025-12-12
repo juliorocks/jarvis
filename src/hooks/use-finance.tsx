@@ -75,6 +75,7 @@ interface FinanceContextType {
     loading: boolean
     refresh: () => Promise<void>
     addTransaction: (transaction: Omit<Transaction, 'id' | 'status' | 'user_id'> & { status?: string }) => Promise<{ data: any, error: any }>
+    addTransactions: (transactions: (Omit<Transaction, 'id' | 'status' | 'user_id'> & { status?: string })[]) => Promise<{ data: any, error: any }>
     addWallet: (wallet: Omit<Wallet, 'id' | 'balance'> & { balance?: number }) => Promise<{ data: any, error: any }>
     addCategory: (category: Omit<TransactionCategory, 'id'>) => Promise<{ data: any, error: any }>
     creditCards: CreditCard[]
@@ -295,11 +296,36 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
                 throw error
             }
 
-            // Update local state immediately (optimistic-ish or just re-fetch)
             await fetchData()
             return { data, error: null }
         } catch (error) {
-            console.error('Error adding transaction (Catch):', error)
+            console.error('Error adding transaction:', error)
+            return { data: null, error }
+        }
+    }
+
+    const addTransactions = async (transactions: (Omit<Transaction, 'id' | 'status' | 'user_id'> & { status?: string })[]) => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session?.user) throw new Error("User not authenticated")
+
+            const payload = transactions.map(t => ({
+                ...t,
+                user_id: session.user.id,
+                family_id: familyId
+            }));
+
+            const { data, error } = await supabase
+                .from('transactions')
+                .insert(payload)
+                .select()
+
+            if (error) throw error
+
+            await fetchData()
+            return { data, error: null }
+        } catch (error) {
+            console.error('Error adding transactions:', error)
             return { data: null, error }
         }
     }
@@ -569,6 +595,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
             loading,
             refresh: fetchData,
             addTransaction,
+            addTransactions,
             addWallet,
             updateWallet,
             deleteWallet,

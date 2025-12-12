@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, addWeeks, subWeeks, addYears, subYears } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, addWeeks, subWeeks, addYears, subYears, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,11 +12,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, MapPin, Clock, Trash2, Pencil, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEvents } from "@/hooks/use-events";
+import { useFinance } from "@/hooks/use-finance";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function CalendarView() {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const { events, loading, createEvent, deleteEvent, updateEvent } = useEvents();
+    const { transactions } = useFinance();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingEventId, setEditingEventId] = useState<string | null>(null);
     const [newEvent, setNewEvent] = useState({
@@ -28,7 +32,31 @@ export function CalendarView() {
         location: ""
     });
 
-    const selectedDateEvents = events.filter(event => {
+    // Recurrence State
+    const [isRecurring, setIsRecurring] = useState(false);
+    const [frequency, setFrequency] = useState("weekly");
+    const [endDate, setEndDate] = useState("");
+
+    const allEvents = [
+        ...events,
+        ...transactions.map(t => {
+            const [y, m, d] = t.date.split('-').map(Number);
+            const dt = new Date(y, m - 1, d, 12, 0, 0);
+            return {
+                id: `txn-${t.id}`,
+                title: `${t.type === 'income' ? '+' : '-'} ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)} ${t.description}`,
+                start_time: dt.toISOString(),
+                end_time: dt.toISOString(),
+                is_all_day: true,
+                location: 'Financeiro',
+                description: t.category?.name,
+                is_transaction: true,
+                color_class: t.type === 'income' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'
+            };
+        })
+    ] as any[];
+
+    const selectedDateEvents = allEvents.filter(event => {
         if (!date) return false;
         const eventDate = new Date(event.start_time);
         return eventDate.toDateString() === date.toDateString();
@@ -39,34 +67,68 @@ export function CalendarView() {
     const handleCreateEvent = async () => {
         if (!newEvent.date || !newEvent.title) return;
         setIsSaving(true);
-
         try {
-            // Use date from state instead of selected calendar date
-            // Parse YYYY-MM-DD to Date object manually to avoid timezone issues
             const [year, month, day] = newEvent.date.split('-').map(Number);
-            const eventDateObj = new Date(year, month - 1, day);
+            let currentDate = new Date(year, month - 1, day);
 
-            const startDateTime = new Date(eventDateObj);
-            const [startHour, startMinute] = newEvent.startTime.split(':').map(Number);
-            startDateTime.setHours(startHour, startMinute);
+            if (isRecurring && !editingEventId && endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
 
-            const endDateTime = new Date(eventDateObj);
-            const [endHour, endMinute] = newEvent.endTime.split(':').map(Number);
-            endDateTime.setHours(endHour, endMinute);
+                let count = 0;
+                const LIMIT = 52;
 
-            const eventData = {
-                title: newEvent.title,
-                description: newEvent.description,
-                start_time: startDateTime.toISOString(),
-                end_time: endDateTime.toISOString(),
-                is_all_day: false,
-                location: newEvent.location
-            };
+                while (currentDate <= end && count < LIMIT) {
+                    const startDateTime = new Date(currentDate);
+                    const [startHour, startMinute] = newEvent.startTime.split(':').map(Number);
+                    startDateTime.setHours(startHour, startMinute);
 
-            if (editingEventId) {
-                await updateEvent(editingEventId, eventData);
+                    const endDateTime = new Date(currentDate);
+                    const [endHour, endMinute] = newEvent.endTime.split(':').map(Number);
+                    endDateTime.setHours(endHour, endMinute);
+
+                    const eventData = {
+                        title: newEvent.title,
+                        description: newEvent.description,
+                        start_time: startDateTime.toISOString(),
+                        end_time: endDateTime.toISOString(),
+                        is_all_day: false,
+                        location: newEvent.location
+                    };
+
+                    await createEvent(eventData); // Sequential wait
+
+                    if (frequency === 'daily') currentDate = addDays(currentDate, 1);
+                    else if (frequency === 'weekly') currentDate = addWeeks(currentDate, 1);
+                    else if (frequency === 'biweekly') currentDate = addWeeks(currentDate, 2);
+                    else if (frequency === 'monthly') currentDate = addMonths(currentDate, 1);
+                    else if (frequency === 'yearly') currentDate = addYears(currentDate, 1);
+
+                    count++;
+                }
             } else {
-                await createEvent(eventData);
+                const startDateTime = new Date(currentDate);
+                const [startHour, startMinute] = newEvent.startTime.split(':').map(Number);
+                startDateTime.setHours(startHour, startMinute);
+
+                const endDateTime = new Date(currentDate);
+                const [endHour, endMinute] = newEvent.endTime.split(':').map(Number);
+                endDateTime.setHours(endHour, endMinute);
+
+                const eventData = {
+                    title: newEvent.title,
+                    description: newEvent.description,
+                    start_time: startDateTime.toISOString(),
+                    end_time: endDateTime.toISOString(),
+                    is_all_day: false,
+                    location: newEvent.location
+                };
+
+                if (editingEventId) {
+                    await updateEvent(editingEventId, eventData);
+                } else {
+                    await createEvent(eventData);
+                }
             }
 
             setIsDialogOpen(false);
@@ -78,6 +140,9 @@ export function CalendarView() {
                 endTime: "10:00",
                 location: ""
             });
+            setIsRecurring(false);
+            setFrequency("weekly");
+            setEndDate("");
             setEditingEventId(null);
         } catch (error) {
             console.error("Failed to save event", error);
@@ -174,6 +239,48 @@ export function CalendarView() {
                                         />
                                     </div>
                                 </div>
+
+                                {/* Recurrence Options */}
+                                {!editingEventId && (
+                                    <div className="space-y-4 border p-3 rounded-md bg-muted/20">
+                                        <div className="flex items-center space-x-2">
+                                            <Switch
+                                                id="recurring"
+                                                checked={isRecurring}
+                                                onCheckedChange={setIsRecurring}
+                                            />
+                                            <Label htmlFor="recurring">Repetir evento?</Label>
+                                        </div>
+
+                                        {isRecurring && (
+                                            <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2">
+                                                <div className="grid gap-2">
+                                                    <Label>Frequência</Label>
+                                                    <Select value={frequency} onValueChange={setFrequency}>
+                                                        <SelectTrigger>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="daily">Diária</SelectItem>
+                                                            <SelectItem value="weekly">Semanal</SelectItem>
+                                                            <SelectItem value="biweekly">Quinzenal</SelectItem>
+                                                            <SelectItem value="monthly">Mensal</SelectItem>
+                                                            <SelectItem value="yearly">Anual</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid gap-2">
+                                                    <Label>Data Final</Label>
+                                                    <Input
+                                                        type="date"
+                                                        value={endDate}
+                                                        onChange={(e) => setEndDate(e.target.value)}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="grid gap-2">
                                     <Label htmlFor="location">Local</Label>
                                     <Input
@@ -235,8 +342,8 @@ export function CalendarView() {
                                     }}
                                     locale={ptBR}
                                     modifiers={{
-                                        hasEvent: (date) => events.some(e => new Date(e.start_time).toDateString() === date.toDateString()),
-                                        isFree: (date) => !events.some(e => new Date(e.start_time).toDateString() === date.toDateString())
+                                        hasEvent: (date) => allEvents.some(e => new Date(e.start_time).toDateString() === date.toDateString()),
+                                        isFree: (date) => !allEvents.some(e => new Date(e.start_time).toDateString() === date.toDateString())
                                     }}
                                     modifiersClassNames={{
                                         hasEvent: "bg-red-100 text-red-900 font-medium hover:bg-red-200 data-[selected=true]:bg-primary data-[selected=true]:text-primary-foreground",
@@ -273,31 +380,42 @@ export function CalendarView() {
                                     <Card key={event.id}>
                                         <CardHeader className="p-4">
                                             <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base">{event.title}</CardTitle>
+                                                <CardTitle className="text-base flex items-center gap-2">
+                                                    {event.title}
+                                                    {event.is_transaction && (
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${event.color_class}`}>
+                                                            Financeiro
+                                                        </span>
+                                                    )}
+                                                </CardTitle>
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex items-center text-sm text-muted-foreground mr-2">
                                                         <Clock className="mr-1 h-3 w-3" />
                                                         {format(new Date(event.start_time), "HH:mm")} - {format(new Date(event.end_time), "HH:mm")}
                                                     </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-muted-foreground hover:text-blue-500"
-                                                        onClick={() => openEditDialog(event)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-muted-foreground hover:text-red-500"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            deleteEvent(event.id);
-                                                        }}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {!event.is_transaction && (
+                                                        <>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-blue-500"
+                                                                onClick={() => openEditDialog(event)}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-red-500"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    deleteEvent(event.id);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
                                             {event.location && (
@@ -360,17 +478,19 @@ export function CalendarView() {
                                 start: startOfWeek(date || new Date()),
                                 end: endOfWeek(date || new Date())
                             }).map((day, i) => {
-                                const dayEvents = events.filter(e => isSameDay(new Date(e.start_time), day));
+                                const dayEvents = allEvents.filter(e => isSameDay(new Date(e.start_time), day));
                                 return (
                                     <div key={day.toISOString()} className="border-r last:border-r-0 p-2 space-y-2 min-h-full">
                                         {dayEvents.map(event => (
                                             <div
                                                 key={event.id}
-                                                className={`p-2 rounded text-xs border cursor-pointer ${event.is_google
-                                                    ? "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
-                                                    : "bg-card border-border hover:bg-accent hover:text-accent-foreground shadow-sm"
+                                                className={`p-2 rounded text-xs border cursor-pointer ${event.is_transaction
+                                                    ? event.color_class
+                                                    : event.is_google
+                                                        ? "bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100"
+                                                        : "bg-card border-border hover:bg-accent hover:text-accent-foreground shadow-sm"
                                                     }`}
-                                                onClick={() => openEditDialog(event)}
+                                                onClick={() => !event.is_transaction && openEditDialog(event)}
                                             >
                                                 <div className="font-semibold mb-1 truncate">{event.title}</div>
                                                 <div className="flex items-center text-[10px] opacity-70 mb-1">
@@ -424,7 +544,7 @@ export function CalendarView() {
                                 start: startOfWeek(startOfMonth(date || new Date())),
                                 end: endOfWeek(endOfMonth(date || new Date()))
                             }).map((day, i) => {
-                                const dayEvents = events.filter(e => isSameDay(new Date(e.start_time), day));
+                                const dayEvents = allEvents.filter(e => isSameDay(new Date(e.start_time), day));
                                 return (
                                     <div
                                         key={day.toISOString()}
@@ -447,11 +567,15 @@ export function CalendarView() {
                                             {dayEvents.slice(0, 3).map(event => (
                                                 <div
                                                     key={event.id}
-                                                    className={`text-[10px] truncate px-1 py-0.5 rounded cursor-pointer ${event.is_google ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-primary/10 text-primary hover:bg-primary/20"
+                                                    className={`text-[10px] truncate px-1 py-0.5 rounded cursor-pointer ${event.is_transaction
+                                                        ? event.color_class
+                                                        : event.is_google
+                                                            ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                                                            : "bg-primary/10 text-primary hover:bg-primary/20"
                                                         }`}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        openEditDialog(event);
+                                                        !event.is_transaction && openEditDialog(event);
                                                     }}
                                                     title={event.title}
                                                 >
@@ -511,8 +635,8 @@ export function CalendarView() {
                                                 day_today: "bg-accent text-accent-foreground font-bold",
                                             }}
                                             modifiers={{
-                                                hasEvent: (d) => events.some(e => new Date(e.start_time).toDateString() === d.toDateString()),
-                                                isFree: (d) => !events.some(e => new Date(e.start_time).toDateString() === d.toDateString()) && !isSameDay(d, new Date())
+                                                hasEvent: (d) => allEvents.some(e => new Date(e.start_time).toDateString() === d.toDateString()),
+                                                isFree: (d) => !allEvents.some(e => new Date(e.start_time).toDateString() === d.toDateString()) && !isSameDay(d, new Date())
                                             }}
                                             modifiersClassNames={{
                                                 hasEvent: "bg-red-100 text-red-900 font-medium",
