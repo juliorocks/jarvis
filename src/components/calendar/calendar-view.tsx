@@ -311,7 +311,7 @@ export function CalendarView() {
             </div>
 
             <TabsContent value="day" className="m-0">
-                <div className="grid gap-6 md:grid-cols-[350px_1fr]">
+                <div className="grid gap-6 xl:grid-cols-[350px_1fr]">
                     <div className="space-y-6">
                         <Card className="h-fit">
                             <CardHeader>
@@ -380,10 +380,10 @@ export function CalendarView() {
                                     <Card key={event.id}>
                                         <CardHeader className="p-4">
                                             <div className="flex items-center justify-between">
-                                                <CardTitle className="text-base flex items-center gap-2">
-                                                    {event.title}
+                                                <CardTitle className="text-base flex flex-wrap items-center gap-2 leading-tight">
+                                                    <span className="break-words">{event.title}</span>
                                                     {event.is_transaction && (
-                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${event.color_class}`}>
+                                                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0 ${event.color_class}`}>
                                                             Financeiro
                                                         </span>
                                                     )}
