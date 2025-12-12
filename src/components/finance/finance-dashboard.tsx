@@ -72,364 +72,398 @@ export function FinanceDashboard() {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
-    });
+        // Chart Logic (Area Chart - Evolution)
+        const chartData = useMemo(() => {
+            const now = new Date();
+            if (chartFilter === 'year') {
+                const months = eachMonthOfInterval({ start: startOfYear(now), end: endOfYear(now) });
+                return months.map(month => {
+                    const monthTrans = transactions.filter(t => isSameMonth(new Date(t.date), month));
+                    const receita = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+                    const despesa = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+                    return {
+                        name: format(month, 'MMM', { locale: ptBR }),
+                        receita,
+                        despesa
+                    };
+                });
+            } else {
+                let start = startOfMonth(now);
+                let end = endOfMonth(now);
+                if (chartFilter === 'week') {
+                    start = startOfWeek(now);
+                    end = endOfWeek(now);
+                }
+                const days = eachDayOfInterval({ start, end });
+                return days.map(day => {
+                    const dateStr = format(day, 'yyyy-MM-dd');
+                    const dayTrans = transactions.filter(t => t.date === dateStr);
+                    const receita = dayTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+                    const despesa = dayTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+                    return {
+                        name: format(day, 'dd'),
+                        fullDate: format(day, 'dd/MM'),
+                        receita,
+                        despesa
+                    };
+                });
+            }
+        }, [transactions, chartFilter]);
+    }, [transactions, chartFilter]);
 
-    // Chart Logic
-}, [transactions, chartFilter]);
+    // Category Pie Chart Logic
+    const categoryData = useMemo(() => {
+        const currentMonthExpenses = transactions.filter(t =>
+            t.type === 'expense' &&
+            new Date(t.date).getMonth() === currentMonth
+        );
 
-// Category Pie Chart Logic
-const categoryData = useMemo(() => {
-    const currentMonthExpenses = transactions.filter(t =>
-        t.type === 'expense' &&
-        new Date(t.date).getMonth() === currentMonth
-    );
+        const categoryMap: Record<string, number> = {};
+        currentMonthExpenses.forEach(t => {
+            const cat = t.category || 'Outros';
+            categoryMap[cat] = (categoryMap[cat] || 0) + t.amount;
+        });
 
-    const categoryMap: Record<string, number> = {};
-    currentMonthExpenses.forEach(t => {
-        const cat = t.category || 'Outros';
-        categoryMap[cat] = (categoryMap[cat] || 0) + t.amount;
-    });
+        const COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#a05195', '#d45087'];
 
-    const COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#a05195', '#d45087'];
+        // Sort by value and take top 5 + Others
+        const entries = Object.entries(categoryMap)
+            .sort(([, a], [, b]) => b - a);
 
-    // Sort by value and take top 5 + Others
-    const entries = Object.entries(categoryMap)
-        .sort(([, a], [, b]) => b - a);
+        return entries.map(([name, value], index) => ({
+            name,
+            value,
+            color: COLORS[index % COLORS.length]
+        }));
+    }, [transactions, currentMonth]);
 
-    return entries.map(([name, value], index) => ({
-        name,
-        value,
-        color: COLORS[index % COLORS.length]
-    }));
-}, [transactions, currentMonth]);
+    // AI Insight Trigger
+    // AI Insight Trigger
+    useEffect(() => {
+        const checkAndRunAnalysis = async () => {
+            if (transactions.length === 0) return;
 
-// AI Insight Trigger
-// AI Insight Trigger
-useEffect(() => {
-    const checkAndRunAnalysis = async () => {
-        if (transactions.length === 0) return;
+            const storedData = localStorage.getItem('financeAnalysisData');
+            let lastAnalysis = storedData ? JSON.parse(storedData) : null;
+            const now = Date.now();
+            const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
 
-        const storedData = localStorage.getItem('financeAnalysisData');
-        let lastAnalysis = storedData ? JSON.parse(storedData) : null;
-        const now = Date.now();
-        const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+            // Check for large movement (e.g., > R$ 1000 difference)
+            // Note: This is a simple heuristic.
+            const hasLargeMovement = lastAnalysis && Math.abs(totalBalance - (lastAnalysis.lastBalance || 0)) > 1000;
+            const isOld = !lastAnalysis || (now - (lastAnalysis.timestamp || 0) > ONE_WEEK);
 
-        // Check for large movement (e.g., > R$ 1000 difference)
-        // Note: This is a simple heuristic.
-        const hasLargeMovement = lastAnalysis && Math.abs(totalBalance - (lastAnalysis.lastBalance || 0)) > 1000;
-        const isOld = !lastAnalysis || (now - (lastAnalysis.timestamp || 0) > ONE_WEEK);
+            // If we have recent valid insights and no large movement, use cache
+            if (!isOld && !hasLargeMovement && lastAnalysis?.insights) {
+                if (!aiInsights) setAiInsights(lastAnalysis.insights);
+                return;
+            }
 
-        // If we have recent valid insights and no large movement, use cache
-        if (!isOld && !hasLargeMovement && lastAnalysis?.insights) {
-            if (!aiInsights) setAiInsights(lastAnalysis.insights);
-            return;
-        }
+            // Otherwise generate new insights
+            const metrics = {
+                totalBalance,
+                incomeMonth,
+                expenseMonth,
+                transactionCount: transactions.length,
+                lastTransaction: transactions[0]?.description
+            };
 
-        // Otherwise generate new insights
-        const metrics = {
-            totalBalance,
-            incomeMonth,
-            expenseMonth,
-            transactionCount: transactions.length,
-            lastTransaction: transactions[0]?.description
+            // Avoid calling if we just called it (handled by aiInsights check if we wanted, but here we force update if condition met)
+            try {
+                const insights = await generateFinanceInsights(metrics);
+                setAiInsights(insights);
+
+                localStorage.setItem('financeAnalysisData', JSON.stringify({
+                    timestamp: now,
+                    lastBalance: totalBalance,
+                    insights
+                }));
+            } catch (err) {
+                console.error("Failed to generate insights", err);
+            }
         };
 
-        // Avoid calling if we just called it (handled by aiInsights check if we wanted, but here we force update if condition met)
-        try {
-            const insights = await generateFinanceInsights(metrics);
-            setAiInsights(insights);
+        checkAndRunAnalysis();
+    }, [transactions, totalBalance, incomeMonth, expenseMonth]);
 
-            localStorage.setItem('financeAnalysisData', JSON.stringify({
-                timestamp: now,
-                lastBalance: totalBalance,
-                insights
-            }));
-        } catch (err) {
-            console.error("Failed to generate insights", err);
-        }
-    };
+    return (
+        <div className="space-y-6">
+            <TransactionForm
+                open={isFormOpen}
+                onOpenChange={(open) => {
+                    setIsFormOpen(open);
+                    if (!open) setEditingTransaction(null);
+                }}
+                initialData={editingTransaction}
+            />
 
-    checkAndRunAnalysis();
-}, [transactions, totalBalance, incomeMonth, expenseMonth]);
+            <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. Isso excluirá permanentemente a transação.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
-return (
-    <div className="space-y-6">
-        <TransactionForm
-            open={isFormOpen}
-            onOpenChange={(open) => {
-                setIsFormOpen(open);
-                if (!open) setEditingTransaction(null);
-            }}
-            initialData={editingTransaction}
-        />
-
-        <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Esta ação não pode ser desfeita. Isso excluirá permanentemente a transação.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
-
-        {/* Summary Cards */}
-        {/* Summary Cards */}
-        {/* MAIN SUMMARY CARD */}
-        <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white dark:bg-card">
-            <div className="p-6 pb-2">
-                {/* Header: Month Selector & Avatar placehoder if needed */}
-                <div className="flex justify-between items-start mb-6">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
-                        {/* Avatar placeholder - typically fetched from profile */}
-                        <div className="flex items-center justify-center h-full w-full text-xs font-bold text-gray-500">YOU</div>
+            {/* Summary Cards */}
+            {/* Summary Cards */}
+            {/* MAIN SUMMARY CARD */}
+            <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white dark:bg-card">
+                <div className="p-6 pb-2">
+                    {/* Header: Month Selector & Avatar placehoder if needed */}
+                    <div className="flex justify-between items-start mb-6">
+                        <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
+                            {/* Avatar placeholder - typically fetched from profile */}
+                            <div className="flex items-center justify-center h-full w-full text-xs font-bold text-gray-500">YOU</div>
+                        </div>
+                        <div className="flex flex-col items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg px-3 py-1 transition-colors">
+                            <span className="text-sm font-medium flex items-center gap-1">
+                                {format(new Date(), 'MMMMM', { locale: ptBR })} <ChevronDown className="h-3 w-3" />
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-full text-xs font-bold">
+                            <Coins className="h-3 w-3 fill-yellow-500" />
+                            <span>1.225</span>
+                        </div>
                     </div>
-                    <div className="flex flex-col items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg px-3 py-1 transition-colors">
-                        <span className="text-sm font-medium flex items-center gap-1">
-                            {format(new Date(), 'MMMMM', { locale: ptBR })} <ChevronDown className="h-3 w-3" />
-                        </span>
+
+                    {/* Balance */}
+                    <div className="text-center mb-8">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Saldo em contas</p>
+                        <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+                            {showBalance
+                                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)
+                                : "R$ •••••••"
+                            }
+                        </h1>
+                        <button onClick={() => setShowBalance(!showBalance)} className="mt-2 text-gray-400 hover:text-gray-600 transition-colors">
+                            {showBalance ? <Eye className="h-5 w-5 mx-auto" /> : <EyeOff className="h-5 w-5 mx-auto" />}
+                        </button>
                     </div>
-                    <div className="flex items-center gap-1 text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-full text-xs font-bold">
-                        <Coins className="h-3 w-3 fill-yellow-500" />
-                        <span>1.225</span>
+
+                    {/* Income / Expsense Row */}
+                    <div className="flex justify-between items-center px-4 md:px-12 pb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <ArrowUpCircle className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Receitas</p>
+                                <p className="text-green-600 font-bold">
+                                    {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                                <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500 font-medium">Despesas</p>
+                                <p className="text-red-500 font-bold">
+                                    {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </Card>
 
-                {/* Balance */}
-                <div className="text-center mb-8">
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Saldo em contas</p>
-                    <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-                        {showBalance
-                            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)
-                            : "R$ •••••••"
-                        }
-                    </h1>
-                    <button onClick={() => setShowBalance(!showBalance)} className="mt-2 text-gray-400 hover:text-gray-600 transition-colors">
-                        {showBalance ? <Eye className="h-5 w-5 mx-auto" /> : <EyeOff className="h-5 w-5 mx-auto" />}
-                    </button>
+            {/* Chart Section */}
+            {/* Expenses chart */}
+            <div>
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2">Despesas por categoria</h3>
+                <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white dark:bg-card p-6">
+                    <div className="h-[250px] w-full flex flex-col md:flex-row items-center justify-center">
+                        {categoryData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={categoryData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                        stroke="none"
+                                    >
+                                        {categoryData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
+                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                    <Legend
+                                        layout="vertical"
+                                        verticalAlign="middle"
+                                        align="right"
+                                        formatter={(value, entry: any) => (
+                                            <span className="text-sm font-medium ml-2 text-gray-600 dark:text-gray-300">
+                                                {value} <span className="text-gray-400 font-normal ml-2">
+                                                    {/* @ts-ignore */}
+                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.payload.value)}
+                                                </span>
+                                            </span>
+                                        )}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                                <div className="h-24 w-24 rounded-full border-4 border-muted flex items-center justify-center mb-2">
+                                    <span className="text-3xl">🤷‍♂️</span>
+                                </div>
+                                <p>Sem despesas este mês</p>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
+                    <CreditCardList />
                 </div>
-
-                {/* Income / Expsense Row */}
-                <div className="flex justify-between items-center px-4 md:px-12 pb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                            <ArrowUpCircle className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-500 font-medium">Receitas</p>
-                            <p className="text-green-600 font-bold">
-                                {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800" />
-
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                            <ArrowDownCircle className="h-6 w-6 text-red-500" />
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-500 font-medium">Despesas</p>
-                            <p className="text-red-500 font-bold">
-                                {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
-                            </p>
-                        </div>
-                    </div>
+                <div className="space-y-4">
+                    <WalletList />
                 </div>
             </div>
-        </Card>
 
-        {/* Chart Section */}
-        {/* Expenses chart */}
-        <div>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2">Despesas por categoria</h3>
-            <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white dark:bg-card p-6">
-                <div className="h-[250px] w-full flex flex-col md:flex-row items-center justify-center">
-                    {categoryData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={categoryData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    stroke="none"
-                                >
-                                    {categoryData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                />
-                                <Legend
-                                    layout="vertical"
-                                    verticalAlign="middle"
-                                    align="right"
-                                    formatter={(value, entry: any) => (
-                                        <span className="text-sm font-medium ml-2 text-gray-600 dark:text-gray-300">
-                                            {value} <span className="text-gray-400 font-normal ml-2">
-                                                {/* @ts-ignore */}
-                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.payload.value)}
-                                            </span>
-                                        </span>
-                                    )}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <h2 className="text-xl font-semibold">Transações Recentes</h2>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}>
+                        {sortOrder === 'desc' ? <ArrowDownNarrowWide className="h-4 w-4" /> : <ArrowUpNarrowWide className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsFamilyOpen(true)} className="flex-1 md:flex-none">
+                        <Users className="mr-2 h-4 w-4" /> Família
+                    </Button>
+                    <Button onClick={() => setIsFormOpen(true)} className="flex-1 md:flex-none">
+                        <Plus className="mr-2 h-4 w-4" /> Nova Transação
+                    </Button>
+                </div>
+            </div>
+
+            <FamilySettings open={isFamilyOpen} onOpenChange={setIsFamilyOpen} />
+
+            {/* Transactions List */}
+            <Card>
+                <CardContent className="p-0">
+                    {loading ? (
+                        <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+                    ) : sortedTransactions.length === 0 ? (
+                        <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-                            <div className="h-24 w-24 rounded-full border-4 border-muted flex items-center justify-center mb-2">
-                                <span className="text-3xl">🤷‍♂️</span>
-                            </div>
-                            <p>Sem despesas este mês</p>
+                        <div className="divide-y">
+                            {sortedTransactions.map((t) => {
+                                let bgClass = 'bg-[#92d5b4]'; // Default / Money
+                                if (t.credit_card_id || t.payment_method === 'credit') bgClass = 'bg-[#97bfcb]';
+                                else if (t.payment_method === 'pix') bgClass = 'bg-[#b49aca]';
+
+                                return (
+                                    <div
+                                        key={t.id}
+                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                                        onClick={() => handleEdit(t)}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${bgClass}`}>
+                                                {t.credit_card_id || t.payment_method === 'credit' ? (
+                                                    <CreditCard className="h-5 w-5" />
+                                                ) : t.payment_method === 'pix' ? (
+                                                    <QrCode className="h-5 w-5" />
+                                                ) : (
+                                                    <Banknote className="h-5 w-5" />
+                                                )}
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="font-medium leading-none">{t.description}</p>
+                                                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                                    {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
+                                                    {t.profiles && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full inline-flex items-center">
+                                                                {t.profiles.full_name?.split(' ')[0] || t.profiles.email?.split('@')[0] || "Desconhecido"}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className={`text-sm ${t.type === 'income' ? 'text-[#5cd36b]' : 'text-[#e14948]'}`}>
+                                                {t.type === 'income' ? '+' : '-'}
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}
+                                            </div>
+                                            <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => handleEdit(t)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Editar
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(t.id)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Excluir
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
-                </div>
-            </Card>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-4">
-                <CreditCardList />
-            </div>
-            <div className="space-y-4">
-                <WalletList />
-            </div>
-        </div>
-
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-xl font-semibold">Transações Recentes</h2>
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}>
-                    {sortOrder === 'desc' ? <ArrowDownNarrowWide className="h-4 w-4" /> : <ArrowUpNarrowWide className="h-4 w-4" />}
-                </Button>
-                <Button variant="outline" onClick={() => setIsFamilyOpen(true)} className="flex-1 md:flex-none">
-                    <Users className="mr-2 h-4 w-4" /> Família
-                </Button>
-                <Button onClick={() => setIsFormOpen(true)} className="flex-1 md:flex-none">
-                    <Plus className="mr-2 h-4 w-4" /> Nova Transação
-                </Button>
-            </div>
-        </div>
-
-        <FamilySettings open={isFamilyOpen} onOpenChange={setIsFamilyOpen} />
-
-        {/* Transactions List */}
-        <Card>
-            <CardContent className="p-0">
-                {loading ? (
-                    <div className="p-8 text-center text-muted-foreground">Carregando...</div>
-                ) : sortedTransactions.length === 0 ? (
-                    <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
-                ) : (
-                    <div className="divide-y">
-                        {sortedTransactions.map((t) => {
-                            let bgClass = 'bg-[#92d5b4]'; // Default / Money
-                            if (t.credit_card_id || t.payment_method === 'credit') bgClass = 'bg-[#97bfcb]';
-                            else if (t.payment_method === 'pix') bgClass = 'bg-[#b49aca]';
-
-                            return (
-                                <div
-                                    key={t.id}
-                                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                                    onClick={() => handleEdit(t)}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${bgClass}`}>
-                                            {t.credit_card_id || t.payment_method === 'credit' ? (
-                                                <CreditCard className="h-5 w-5" />
-                                            ) : t.payment_method === 'pix' ? (
-                                                <QrCode className="h-5 w-5" />
-                                            ) : (
-                                                <Banknote className="h-5 w-5" />
-                                            )}
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="font-medium leading-none">{t.description}</p>
-                                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
-                                                {t.profiles && (
-                                                    <>
-                                                        <span>•</span>
-                                                        <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full inline-flex items-center">
-                                                            {t.profiles.full_name?.split(' ')[0] || t.profiles.email?.split('@')[0] || "Desconhecido"}
-                                                        </span>
-                                                    </>
-                                                )}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className={`text-sm ${t.type === 'income' ? 'text-[#5cd36b]' : 'text-[#e14948]'}`}>
-                                            {t.type === 'income' ? '+' : '-'}
-                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}
-                                        </div>
-                                        <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                                        <span className="sr-only">Open menu</span>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEdit(t)}>
-                                                        <Edit className="mr-2 h-4 w-4" />
-                                                        Editar
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(t.id)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Excluir
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </CardContent>
-        </Card>
-        {/* AI Analysis Section */}
-        {aiInsights && (
-            <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
-                        <Sparkles className="h-5 w-5" />
-                        Análise Inteligente do Jarvis
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid md:grid-cols-2 gap-4">
-                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-                            <h4 className="font-semibold text-sm mb-1 text-red-600">Sobre suas Despesas</h4>
-                            <p className="text-sm text-muted-foreground">{aiInsights.expensesAnalysis}</p>
-                        </div>
-                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-                            <h4 className="font-semibold text-sm mb-1 text-green-600">Sobre suas Receitas</h4>
-                            <p className="text-sm text-muted-foreground">{aiInsights.incomeAnalysis}</p>
-                        </div>
-                    </div>
-                    <div className="p-3 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                        <h4 className="font-semibold text-sm mb-1 text-indigo-800 dark:text-indigo-200">Resumo do Mês</h4>
-                        <p className="text-sm text-indigo-700 dark:text-indigo-300">{aiInsights.overallAnalysis}</p>
-                    </div>
                 </CardContent>
             </Card>
-        )}
-    </div>
-)
+            {/* AI Analysis Section */}
+            {aiInsights && (
+                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
+                            <Sparkles className="h-5 w-5" />
+                            Análise Inteligente do Jarvis
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                                <h4 className="font-semibold text-sm mb-1 text-red-600">Sobre suas Despesas</h4>
+                                <p className="text-sm text-muted-foreground">{aiInsights.expensesAnalysis}</p>
+                            </div>
+                            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                                <h4 className="font-semibold text-sm mb-1 text-green-600">Sobre suas Receitas</h4>
+                                <p className="text-sm text-muted-foreground">{aiInsights.incomeAnalysis}</p>
+                            </div>
+                        </div>
+                        <div className="p-3 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                            <h4 className="font-semibold text-sm mb-1 text-indigo-800 dark:text-indigo-200">Resumo do Mês</h4>
+                            <p className="text-sm text-indigo-700 dark:text-indigo-300">{aiInsights.overallAnalysis}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+        </div>
+    )
 }
