@@ -292,7 +292,7 @@ export function FinanceDashboard() {
         };
 
         checkAndRunAnalysis();
-    }, [transactions, totalBalance, incomeMonth, expenseMonth]);
+    }, [transactions, totalBalance, incomeTotal, expenseTotal]);
 
     return (
         <div className="space-y-6">
