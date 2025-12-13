@@ -92,113 +92,153 @@ export async function getAdminStats() {
 }
 
 export async function getUsers(query = "", planFilter = "all") {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Unauthorized");
 
-    // Check Admin Role
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    if (profile?.role !== "admin") throw new Error("Unauthorized");
+        // Check Admin Role
+        // We try to check via DB, but fallback to email check if DB fails or returns null to avoid RLS lookup issues
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
 
-    // 1. Fetch Profiles
-    let dbQuery = supabase
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
+        const isAdminInDb = profile?.role === "admin";
+        const isAdminByEmail = user.email?.toLowerCase() === 'jhowmktoficial@gmail.com';
 
-    if (query) {
-        dbQuery = dbQuery.ilike("full_name", `%${query}%`);
-    }
-    if (planFilter !== "all") {
-        dbQuery = dbQuery.eq("plan_type", planFilter);
-    }
+        if (!isAdminInDb && !isAdminByEmail) {
+            throw new Error("Unauthorized: Admin Access Required");
+        }
 
-    const { data: profiles, error } = await dbQuery;
-    if (error) throw new Error("Erro ao buscar perfis: " + error.message);
+        // 1. Fetch Profiles
+        let dbQuery = supabase
+            .from("profiles")
+            .select("*")
+            .order("created_at", { ascending: false });
 
-    if (!profiles || profiles.length === 0) return [];
+        if (query) {
+            dbQuery = dbQuery.ilike("full_name", `%${query}%`);
+        }
+        if (planFilter !== "all") {
+            dbQuery = dbQuery.eq("plan_type", planFilter);
+        }
 
-    // 2. Fetch Family Data manually to avoid complex Joins/RLS issues/FK missing errors
-    // distinct user IDs
-    const userIds = profiles.map(p => p.id);
+        const { data: profiles, error } = await dbQuery;
+        if (error) {
+            console.error("Error fetching profiles:", error);
+            throw new Error("Erro ao buscar perfis: " + error.message);
+        }
 
-    // Fetch memberships for these users
-    // Note: Admin needs RLS policy to see family_members!
-    const { data: memberships, error: memError } = await supabase
-        .from("family_members")
-        .select("user_id, role, family_id")
-        .in("user_id", userIds);
+        if (!profiles || profiles.length === 0) return [];
 
-    if (memError) {
-        console.error("Erro ao buscar membros de família:", memError.message);
-        // Continue without family data if fails? Or throw?
-        // Let's log and continue, treating as standalone for now, but valid.
-    }
+        // 2. Fetch Family Data manually to avoid complex Joins/RLS issues/FK missing errors
+        const userIds = profiles.map(p => p.id);
 
-    // Fetch Family Details
-    const familyIds = memberships?.map(m => m.family_id) || [];
-    let families: any[] = [];
-    if (familyIds.length > 0) {
-        const { data: fams, error: famError } = await supabase
-            .from("families")
-            .select("id, name, owner_id")
-            .in("id", familyIds);
+        let memberships: any[] = [];
+        try {
+            const { data, error: memError } = await supabase
+                .from("family_members")
+                .select("user_id, role, family_id")
+                .in("user_id", userIds);
 
-        if (fams) families = fams;
-    }
-
-    // 3. Merge Data in Memory
-    const familiesMap: Record<string, { owner?: any, members: any[], familyName?: string }> = {};
-    const standaloneUsers: any[] = [];
-
-    // Helper to find membership
-    const getMembership = (uid: string) => memberships?.find(m => m.user_id === uid);
-    const getFamily = (fid: string) => families.find(f => f.id === fid);
-
-    profiles.forEach((p: any) => {
-        const mem = getMembership(p.id);
-
-        if (mem) {
-            const family = getFamily(mem.family_id);
-            const familyId = mem.family_id;
-
-            p.familyRole = mem.role;
-            p.familyName = family?.name;
-            p.familyId = familyId;
-
-            if (!familiesMap[familyId]) {
-                familiesMap[familyId] = { members: [], familyName: family?.name };
+            if (memError) {
+                console.error("Erro ao buscar membros de família:", memError.message);
+            } else if (data) {
+                memberships = data;
             }
+        } catch (e) {
+            console.error("Exception fetching members:", e);
+        }
 
-            if (mem.role === 'owner') {
-                familiesMap[familyId].owner = p;
+        // Fetch Family Details
+        // Only fetch if we found memberships
+        const familyIds = memberships.map(m => m.family_id).filter(Boolean);
+        let families: any[] = [];
+
+        if (familyIds.length > 0) {
+            try {
+                // remove duplicates
+                const distinctFamilyIds = Array.from(new Set(familyIds));
+                const { data: fams, error: famError } = await supabase
+                    .from("families")
+                    .select("id, name, owner_id")
+                    .in("id", distinctFamilyIds);
+
+                if (famError) {
+                    console.error("Error fetching families:", famError.message);
+                } else if (fams) {
+                    families = fams;
+                }
+            } catch (e) {
+                console.error("Exception fetching families:", e);
+            }
+        }
+
+        // 3. Merge Data in Memory
+        const familiesMap: Record<string, { owner?: any, members: any[], familyName?: string }> = {};
+        const standaloneUsers: any[] = [];
+
+        // Helper to find membership
+        const getMembership = (uid: string) => memberships.find(m => m.user_id === uid);
+        const getFamily = (fid: string) => families.find(f => f.id === fid);
+
+        // Process profiles securely
+        const processedProfiles = profiles.map(p => ({ ...p })); // Clone to avoid mutation issues
+
+        processedProfiles.forEach((p: any) => {
+            const mem = getMembership(p.id);
+
+            if (mem) {
+                const family = getFamily(mem.family_id);
+                const familyId = mem.family_id;
+
+                p.familyRole = mem.role;
+                p.familyName = family?.name;
+                p.familyId = familyId;
+
+                if (!familiesMap[familyId]) {
+                    familiesMap[familyId] = { members: [], familyName: family?.name };
+                }
+
+                if (mem.role === 'owner') {
+                    // Start 'guests' array if being an owner
+                    p.guests = [];
+                    familiesMap[familyId].owner = p;
+                } else {
+                    familiesMap[familyId].members.push(p);
+                }
             } else {
-                familiesMap[familyId].members.push(p);
+                p.familyRole = 'none';
+                standaloneUsers.push(p);
             }
-        } else {
-            p.familyRole = 'none';
-            standaloneUsers.push(p);
-        }
-    });
+        });
 
-    const result: any[] = [];
-    result.push(...standaloneUsers);
+        const result: any[] = [];
+        // Add Standalone
+        result.push(...standaloneUsers);
 
-    Object.values(familiesMap).forEach(fam => {
-        if (fam.owner) {
-            fam.owner.guests = fam.members;
-            result.push(fam.owner);
-        } else {
-            // Orphaned members or Owner not in current filter page?
-            // Just add them flat
-            result.push(...fam.members);
-        }
-    });
+        // Process Families
+        Object.values(familiesMap).forEach(fam => {
+            if (fam.owner) {
+                // Attach guests to owner safely
+                // We ensure 'guests' property exists and is array
+                fam.owner.guests = fam.members || [];
+                result.push(fam.owner);
+            } else {
+                // Orphaned members? Just add them as individual rows.
+                result.push(...fam.members);
+            }
+        });
 
-    // Sort by created_at desc
-    result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        // Sort by created_at desc
+        result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-    return result;
+        return result;
+
+    } catch (e: any) {
+        console.error("CRITICAL ERROR in getUsers:", e);
+        // Instead of throwing 500 to client, return empty array so page renders (and maybe shows empty state)
+        // Or throw a clean error message
+        throw new Error(e.message || "Erro desconhecido ao carregar usuários.");
+    }
 }
 
 export async function updateUserStatus(userId: string, status: string) {
