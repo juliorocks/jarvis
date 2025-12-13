@@ -1,54 +1,25 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CreditCard, ListTodo, Eye, EyeOff } from "lucide-react";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import Link from "next/link";
-import { useFinance, Transaction } from "@/hooks/use-finance";
-import { useState, useMemo, useEffect } from "react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
-import { format, subDays, isSameDay, startOfDay, startOfMonth, startOfYear, endOfDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { JarvisAssistant } from "@/components/jarvis/assistant-button";
-import { FinanceDashboard } from "@/components/finance/finance-dashboard";
+import { useFinance } from "@/hooks/use-finance";
+import { useState } from "react";
 
 export default function DashboardPage() {
     const time = new Date().getHours();
     const greeting = time < 12 ? "Bom dia" : time < 18 ? "Boa tarde" : "Boa noite";
     const { profile, loading } = useUserProfile();
-    const { familyName, wallets, getAnalytics } = useFinance();
+    const { familyName } = useFinance();
 
     // Privacy State (Default: True as requested)
     const [privacyMode, setPrivacyMode] = useState(true);
 
-    // Analytics State
-    const [range, setRange] = useState<'week' | 'month' | 'year'>('week');
-    const [analytics, setAnalytics] = useState<{ chartData: any[], expensePie: any[], incomePie: any[] }>({ chartData: [], expensePie: [], incomePie: [] });
-
     const displayName = loading ? "..." : (profile?.display_name?.split(' ')[0] || "User");
 
-    // Load Analytics
-    // Correct pattern:
-    useEffect(() => {
-        let mounted = true;
-        async function load() {
-            const data = await getAnalytics(range);
-            if (mounted) setAnalytics(data);
-        }
-        load();
-        return () => { mounted = false };
-    }, [range, getAnalytics]);
-
-    const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0);
-
-    const formatCurrency = (value: number) => {
-        if (privacyMode) return "R$ •••••";
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-    };
-
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
 
     return (
         <div className="space-y-6 pb-20 md:pb-0">
