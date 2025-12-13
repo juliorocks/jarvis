@@ -111,7 +111,9 @@ export async function getUsers(query = "", planFilter = "all") {
         let dbQuery = supabase
             .from("profiles")
             .select("*")
-            .order("created_at", { ascending: false });
+            .select("*")
+            // .order("created_at", { ascending: false }); // Debug: Suspicion that created_at is missing
+            .order("email", { ascending: true });
 
         if (query) {
             dbQuery = dbQuery.ilike("full_name", `%${query}%`);
