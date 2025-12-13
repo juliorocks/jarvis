@@ -57,6 +57,11 @@ export function FinanceDashboard() {
         }
     };
 
+    // Filters State
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
+    const [selectedCardId, setSelectedCardId] = useState<string>('all');
+    const [chartFilter, setChartFilter] = useState<'week' | 'month' | 'year'>('month');
+
     // Filtered Transactions Calculation
     const filteredTransactions = useMemo(() => {
         let filtered = transactions;
