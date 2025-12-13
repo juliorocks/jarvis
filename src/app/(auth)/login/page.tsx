@@ -15,7 +15,7 @@ function LoginForm() {
     const supabase = createClient();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const returnUrl = searchParams.get("returnUrl") || "/finance";
+    const returnUrl = searchParams.get("returnUrl") || "/dashboard";
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();

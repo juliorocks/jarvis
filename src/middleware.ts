@@ -35,13 +35,18 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     // Protect Dashboard Routes
-    if (!user && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/auth') && !request.nextUrl.pathname.startsWith('/invite')) {
+    // Allow public access to Landing Page (/), Login, Auth, Invite, Privacy, Terms
+    const publicPaths = ['/login', '/auth', '/invite', '/privacy', '/terms'];
+    const isPublicPath = request.nextUrl.pathname === '/' || publicPaths.some(path => request.nextUrl.pathname.startsWith(path));
+
+    if (!user && !isPublicPath) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // Redirect Logged-In users away from Login page
+    // Redirect Logged-In users away from Login/Landing to Dashboard
+    // If user is logged in and visits login page, go to dashboard
     if (user && request.nextUrl.pathname.startsWith('/login')) {
-        return NextResponse.redirect(new URL('/', request.url))
+        return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
     // -------------------------------------------------------------------------
