@@ -44,6 +44,55 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url))
     }
 
+    // -------------------------------------------------------------------------
+    // SaaS Enforcement (SaaS Logic)
+    // -------------------------------------------------------------------------
+    if (user) {
+        // Fetch Profile for Role and Plan Status
+        // Note: We use the single() query to get the profile.
+        // Optimization: In a high-scale app, consider Claim-based auth (Custom Claims) to avoid DB hit here.
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, plan_status, plan_type, trial_ends_at')
+            .eq('id', user.id)
+            .single()
+
+        // 1. Admin Route Protection
+        if (request.nextUrl.pathname.startsWith('/admin')) {
+            if (profile?.role !== 'admin') {
+                // Not authorized
+                return NextResponse.redirect(new URL('/', request.url))
+            }
+        }
+
+        // 2. Plan Status Enforcement (Block access if expired/suspended)
+        // Exclude /subscription/expired and /account (maybe?) and /admin (if admin is suspended? unlikely)
+        if (!request.nextUrl.pathname.startsWith('/subscription/expired') && !request.nextUrl.pathname.startsWith('/auth')) {
+
+            // Check manual suspension
+            if (profile?.plan_status === 'suspended' || profile?.plan_status === 'expired') {
+                return NextResponse.redirect(new URL('/subscription/expired', request.url))
+            }
+
+            // Check Trial Expiration
+            if (profile?.plan_type === 'trial' && profile?.trial_ends_at) {
+                const trialEnd = new Date(profile.trial_ends_at).getTime();
+                const now = Date.now();
+                if (now > trialEnd) {
+                    // Trial Expired
+                    // Ideally we should update the DB here, but Middleware shouldn't do writes strictly.
+                    // We just block access. The UI/Admin will see it as expired effectively by date.
+                    return NextResponse.redirect(new URL('/subscription/expired', request.url))
+                }
+            }
+
+            // Explicit trial_expired status
+            if (profile?.plan_status === 'trial_expired') {
+                return NextResponse.redirect(new URL('/subscription/expired', request.url))
+            }
+        }
+    }
+
     return response
 }
 

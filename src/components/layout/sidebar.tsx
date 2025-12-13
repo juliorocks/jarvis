@@ -27,6 +27,7 @@ import {
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 interface SidebarProps {
     className?: string;
@@ -51,6 +52,8 @@ export function Sidebar({ className }: SidebarProps) {
         setIsCollapsed(!isCollapsed);
     };
 
+    const { profile } = useUserProfile();
+
     const navItems = [
         {
             title: "Dashboard",
@@ -69,6 +72,14 @@ export function Sidebar({ className }: SidebarProps) {
         },
     ];
 
+    if (profile?.role === 'admin') {
+        navItems.push({
+            title: "Admin",
+            href: "/admin",
+            icon: Settings, // Or Lock/Shield
+        });
+    }
+
     const handleLogout = async () => {
         await supabase.auth.signOut();
         window.location.href = '/login';
@@ -83,7 +94,7 @@ export function Sidebar({ className }: SidebarProps) {
                     className
                 )}
             >
-                {/* Header / Collapse Toggle */}
+                {/* Header... (unchanged) */}
                 <div className="flex h-16 items-center justify-between px-4 border-b">
                     {!isCollapsed && (
                         <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
@@ -147,7 +158,7 @@ export function Sidebar({ className }: SidebarProps) {
                         {isCollapsed && <TooltipContent side="right">Alternar Tema</TooltipContent>}
                     </Tooltip>
 
-                    {/* Profile */}
+                    {/* Profile & Plan Info */}
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Link href="/profile" className={cn(
@@ -159,9 +170,12 @@ export function Sidebar({ className }: SidebarProps) {
                                     <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                                 </Avatar>
                                 {!isCollapsed && (
-                                    <div className="flex flex-col items-start overflow-hidden">
-                                        <span className="truncate w-full text-xs font-semibold">{user?.email?.split('@')[0]}</span>
-                                        <span className="text-[10px] text-muted-foreground">Configurações</span>
+                                    <div className="flex flex-col items-start overflow-hidden w-full">
+                                        <span className="truncate w-full text-xs font-semibold">{profile?.display_name || user?.email?.split('@')[0]}</span>
+                                        <div className="flex items-center justify-between w-full">
+                                            <span className="text-[10px] text-muted-foreground capitalize">{profile?.plan_type || 'Trial'}</span>
+                                            {profile?.plan_status === 'suspended' && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
+                                        </div>
                                     </div>
                                 )}
                             </Link>
