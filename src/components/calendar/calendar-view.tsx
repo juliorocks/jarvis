@@ -211,13 +211,15 @@ export function CalendarView() {
             {/* AI Analysis Section */}
 
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <TabsList className="w-full md:w-auto h-auto p-1 grid grid-cols-4 md:flex">
-                    <TabsTrigger value="day">Dia</TabsTrigger>
-                    <TabsTrigger value="week">Semana</TabsTrigger>
-                    <TabsTrigger value="month">Mês</TabsTrigger>
-                    <TabsTrigger value="year">Ano</TabsTrigger>
-                </TabsList>
+            <div className="flex flex-col gap-4 md:items-center">
+                <div className="flex justify-center mb-6 w-full">
+                    <TabsList className="grid w-full max-w-[400px] grid-cols-4 rounded-full bg-gray-100 dark:bg-zinc-800 p-1">
+                        <TabsTrigger value="day" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Dia</TabsTrigger>
+                        <TabsTrigger value="week" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Sem</TabsTrigger>
+                        <TabsTrigger value="month" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Mês</TabsTrigger>
+                        <TabsTrigger value="year" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Ano</TabsTrigger>
+                    </TabsList>
+                </div>
                 <div className="flex items-center gap-2 self-end md:self-auto">
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
