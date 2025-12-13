@@ -130,7 +130,7 @@ export async function getUsers(query = "", planFilter = "all") {
         .in("user_id", userIds);
 
     if (memError) {
-        console.error("Erro ao buscar membros de família:", memError);
+        console.error("Erro ao buscar membros de família:", memError.message);
         // Continue without family data if fails? Or throw?
         // Let's log and continue, treating as standalone for now, but valid.
     }
