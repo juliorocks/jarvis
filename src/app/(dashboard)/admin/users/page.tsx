@@ -41,8 +41,9 @@ export default function AdminUsersPage() {
         try {
             const data = await getUsers(search, planFilter);
             setUsers(data);
-        } catch (error) {
-            toast.error("Erro ao carregar usuários");
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || "Erro ao carregar usuários");
         } finally {
             setLoading(false);
         }
@@ -171,7 +172,7 @@ export default function AdminUsersPage() {
                                             <TableCell>
                                                 <div className="flex flex-col gap-1 items-start">
                                                     <Badge variant={user.plan_status === 'active' ? 'default' : 'destructive'} className={`${user.plan_status === 'active' ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/40 dark:text-green-400' :
-                                                            'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-400'
+                                                        'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/40 dark:text-red-400'
                                                         } border-none shadow-none`}>
                                                         {user.plan_status === 'active' ? 'Ativo' : user.plan_status === 'trial_expired' ? 'Trial Expirado' : 'Suspenso'}
                                                     </Badge>
