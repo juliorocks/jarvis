@@ -7,7 +7,7 @@ import { CreditCard, ListTodo, Eye, EyeOff } from "lucide-react";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import Link from "next/link";
 import { useFinance, Transaction } from "@/hooks/use-finance";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { format, subDays, isSameDay, startOfDay, startOfMonth, startOfYear, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,7 +30,8 @@ export default function DashboardPage() {
     const displayName = loading ? "..." : (profile?.display_name?.split(' ')[0] || "User");
 
     // Load Analytics
-    useMemo(() => {
+    // Correct pattern:
+    useEffect(() => {
         let mounted = true;
         async function load() {
             const data = await getAnalytics(range);
@@ -38,7 +39,7 @@ export default function DashboardPage() {
         }
         load();
         return () => { mounted = false };
-    }, [range, getAnalytics]); // Using useMemo as useEffect for async data fetching is tricky with potential infinite loops if dep array is unstable, but getAnalytics is stable. Actually useEffect is better for side effects.
+    }, [range, getAnalytics]);
 
     const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0);
 
