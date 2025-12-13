@@ -11,9 +11,10 @@ import { ptBR } from "date-fns/locale";
 import { useState, useMemo, useEffect } from "react";
 import { TransactionForm } from "./transaction-form";
 import { FamilySettings } from "./family-settings";
-import { MoreHorizontal, Edit, Trash2, ChevronDown, Eye, EyeOff, Coins } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, ChevronDown, Eye, EyeOff, Coins, CalendarDays, CalendarClock, CalendarRange, Calendar } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { generateFinanceInsights } from "@/app/actions/finance-ai";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,22 +52,10 @@ export function FinanceDashboard() {
     const [showBalance, setShowBalance] = useState(true); // New state for visibility
 
     // New Features State
-    const [chartFilter, setChartFilter] = useState<'week' | 'month' | 'year'>('month');
-    const [aiInsights, setAiInsights] = useState<any>(null);
-
-    const handleEdit = (transaction: Transaction) => {
-        setEditingTransaction(transaction);
-        setIsFormOpen(true);
-    };
-
-    const handleDelete = async () => {
-        if (deletingId) {
-            await deleteTransaction(deletingId);
-            setDeletingId(null);
-        }
-    };
-
     // Filters State
+    const [periodFilter, setPeriodFilter] = useState<'day' | 'week' | 'month' | 'year'>('month');
+
+    // Category/Source Filters
     const [incomeCategoryId, setIncomeCategoryId] = useState<string>('all');
     const [incomeWalletId, setIncomeWalletId] = useState<string>('all');
     const [expenseCategoryId, setExpenseCategoryId] = useState<string>('all');
@@ -74,7 +63,39 @@ export function FinanceDashboard() {
 
     // Filtered Transactions Calculation
     const filteredTransactions = useMemo(() => {
+        const now = new Date();
+        const startDay = startOfDay(now);
+        const endDay = endOfDay(now);
+        const startWk = startOfWeek(now);
+        const endWk = endOfWeek(now);
+        const startMth = startOfMonth(now);
+        const endMth = endOfMonth(now);
+        const startYr = startOfYear(now);
+        const endYr = endOfYear(now);
+
         return transactions.filter(t => {
+            const tDate = new Date(t.date);
+            const tTime = tDate.getTime();
+
+            // 1. Date Filter
+            let dateMatch = false;
+            if (periodFilter === 'day') {
+                // Check if same day (ignoring time mostly, but t.date string usually yyyy-mm-dd or iso)
+                // Assuming t.date is YYYY-MM-DD string as per logic below, simple check:
+                const tDateStr = format(tDate, 'yyyy-MM-dd');
+                const nowDateStr = format(now, 'yyyy-MM-dd');
+                dateMatch = tDateStr === nowDateStr;
+            } else if (periodFilter === 'week') {
+                dateMatch = tTime >= startWk.getTime() && tTime <= endWk.getTime();
+            } else if (periodFilter === 'month') {
+                dateMatch = tTime >= startMth.getTime() && tTime <= endMth.getTime();
+            } else if (periodFilter === 'year') {
+                dateMatch = tTime >= startYr.getTime() && tTime <= endYr.getTime();
+            }
+
+            if (!dateMatch) return false;
+
+            // 2. Category/Source Filters
             if (t.type === 'income') {
                 if (incomeCategoryId !== 'all' && t.category_id !== incomeCategoryId) return false;
                 if (incomeWalletId !== 'all' && t.wallet_id !== incomeWalletId) return false;
@@ -88,25 +109,22 @@ export function FinanceDashboard() {
                         if (t.credit_card_id !== sourceId) return false;
                     } else if (sourceType === 'wallet') {
                         if (t.wallet_id !== sourceId) return false;
-                        // Ideally ensure it's not a credit payment if that's distinct, but usually wallet_id implication is enough for non-credit transactions logic if they are separated. 
-                        // For now, if wallet_id matches, it's included.
                     }
                 }
                 return true;
             }
             return true;
         });
-    }, [transactions, incomeCategoryId, incomeWalletId, expenseCategoryId, expenseSourceId]);
+    }, [transactions, periodFilter, incomeCategoryId, incomeWalletId, expenseCategoryId, expenseSourceId]);
 
     const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0);
 
-    // Calculate totals for month with FILTERS applied
-    const currentMonth = new Date().getMonth();
-    const incomeMonth = filteredTransactions
-        .filter(t => t.type === 'income' && new Date(t.date).getMonth() === currentMonth)
+    // Calculate totals for selected period
+    const incomeTotal = filteredTransactions
+        .filter(t => t.type === 'income')
         .reduce((acc, t) => acc + t.amount, 0);
-    const expenseMonth = filteredTransactions
-        .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === currentMonth)
+    const expenseTotal = filteredTransactions
+        .filter(t => t.type === 'expense')
         .reduce((acc, t) => acc + t.amount, 0);
 
     const sortedTransactions = [...filteredTransactions].sort((a, b) => {
@@ -118,68 +136,113 @@ export function FinanceDashboard() {
     // Chart Logic (Area Chart - Evolution)
     const chartData = useMemo(() => {
         const now = new Date();
-        if (chartFilter === 'year') {
-            const months = eachMonthOfInterval({ start: startOfYear(now), end: endOfYear(now) });
+        // If Period is Year -> Show Months
+        // If Period is Month -> Show Days of Month
+        // If Period is Week -> Show Days of Week
+        // If Period is Day -> Kind of redundant but show Hourly if possible or just single bar? Let's show Week view for context but highlight day? 
+        // Or actually, just rely on the 'periodFilter' logic requested. Usually charts follow the period.
+
+        // Simplification: 
+        // If 'year' -> months x-axis.
+        // If 'month' -> days x-axis.
+        // If 'week' -> days x-axis.
+        // If 'day' -> maybe just show that day? Or show the week for context?
+
+        let interval: { start: Date, end: Date } = { start: startOfMonth(now), end: endOfMonth(now) };
+        let resolution: 'day' | 'month' = 'day';
+
+        if (periodFilter === 'year') {
+            interval = { start: startOfYear(now), end: endOfYear(now) };
+            resolution = 'month';
+        } else if (periodFilter === 'week') {
+            interval = { start: startOfWeek(now), end: endOfWeek(now) };
+            resolution = 'day';
+        } else if (periodFilter === 'day') {
+            // For Day, showing just one point in Area chart is weird. Let's show the Week but maybe we only filter the list for the day?
+            // Actually user asked for "First filter". If I filter the LIST by day, the CHART should probably reflect that scope or context.
+            // If I show only 1 day on chart, it's a dot. 
+            // Let's stick to: Chart mimics the filter scope fully.
+            interval = { start: startOfDay(now), end: endOfDay(now) };
+            resolution = 'day'; // Only 1 point
+        }
+
+        if (resolution === 'month') {
+            const months = eachMonthOfInterval(interval);
             return months.map(month => {
-                const monthTrans = transactions.filter(t => isSameMonth(new Date(t.date), month));
+                // Note: We need to use ALL transactions for this historical view, filtering only by TYPE, not the specific filters of categories?
+                // The user usually expects the chart to show "Trend of Expenses", filtered by "Food" over the year.
+                // So I MUST use 'transactions' but filter them by the category filters manually here?
+                // OR re-use logic.
+                // Re-using logic is expensive inside map.
+                // Let's optimize: Filter 'transactions' by CAT/SOURCE first (static filters), then bucket by date.
+
+                // 1. Apply Cat/Source Filters to ALL transactions
+                const relevantTrans = transactions.filter(t => {
+                    // logic copied from above effectively
+                    if (t.type === 'income') {
+                        if (incomeCategoryId !== 'all' && t.category_id !== incomeCategoryId) return false;
+                        if (incomeWalletId !== 'all' && t.wallet_id !== incomeWalletId) return false;
+                    } else if (t.type === 'expense') {
+                        if (expenseCategoryId !== 'all' && t.category_id !== expenseCategoryId) return false;
+                        if (expenseSourceId !== 'all') {
+                            const [sourceType, sourceId] = expenseSourceId.split(':');
+                            if (sourceType === 'card' && t.credit_card_id !== sourceId) return false;
+                            if (sourceType === 'wallet' && t.wallet_id !== sourceId) return false;
+                        }
+                    }
+                    return true;
+                });
+
+                const monthTrans = relevantTrans.filter(t => isSameMonth(new Date(t.date), month));
                 const receita = monthTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
                 const despesa = monthTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-                return {
-                    name: format(month, 'MMM', { locale: ptBR }),
-                    receita,
-                    despesa
-                };
+                return { name: format(month, 'MMM', { locale: ptBR }), receita, despesa };
             });
         } else {
-            let start = startOfMonth(now);
-            let end = endOfMonth(now);
-            if (chartFilter === 'week') {
-                start = startOfWeek(now);
-                end = endOfWeek(now);
-            }
-            const days = eachDayOfInterval({ start, end });
+            // Day resolution
+            const days = eachDayOfInterval(interval);
+            // 1. Apply Cat/Source Filters (same as above)
+            const relevantTrans = transactions.filter(t => {
+                if (t.type === 'income') {
+                    if (incomeCategoryId !== 'all' && t.category_id !== incomeCategoryId) return false;
+                    if (incomeWalletId !== 'all' && t.wallet_id !== incomeWalletId) return false;
+                } else if (t.type === 'expense') {
+                    if (expenseCategoryId !== 'all' && t.category_id !== expenseCategoryId) return false;
+                    if (expenseSourceId !== 'all') {
+                        const [sourceType, sourceId] = expenseSourceId.split(':');
+                        if (sourceType === 'card' && t.credit_card_id !== sourceId) return false;
+                        if (sourceType === 'wallet' && t.wallet_id !== sourceId) return false;
+                    }
+                }
+                return true;
+            });
+
             return days.map(day => {
                 const dateStr = format(day, 'yyyy-MM-dd');
-                const dayTrans = transactions.filter(t => t.date === dateStr);
+                const dayTrans = relevantTrans.filter(t => t.date === dateStr);
                 const receita = dayTrans.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
                 const despesa = dayTrans.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
-                return {
-                    name: format(day, 'dd'),
-                    fullDate: format(day, 'dd/MM'),
-                    receita,
-                    despesa
-                };
+                return { name: format(day, 'dd'), fullDate: format(day, 'dd/MM'), receita, despesa };
             });
         }
-    }, [transactions, chartFilter]);
+    }, [transactions, periodFilter, incomeCategoryId, incomeWalletId, expenseCategoryId, expenseSourceId]);
 
-    // Category Pie Chart Logic
+    // Category Pie Chart Logic (Uses filteredTransactions to match the view)
     const categoryData = useMemo(() => {
-        const currentMonthExpenses = transactions.filter(t =>
-            t.type === 'expense' &&
-            new Date(t.date).getMonth() === currentMonth
-        );
+        // Use filteredTransactions directly so it matches the list and totals!
+        const expenses = filteredTransactions.filter(t => t.type === 'expense');
 
         const categoryMap: Record<string, number> = {};
-        currentMonthExpenses.forEach(t => {
-            // t.category is likely an object from the join, we need the name
-            // If it's a string (old data?), handle that too just in case, though type says object
+        expenses.forEach(t => {
             const catName = t.category?.name || 'Outros';
             categoryMap[catName] = (categoryMap[catName] || 0) + t.amount;
         });
 
         const COLORS = ['#8884d8', '#00C49F', '#FFBB28', '#FF8042', '#a05195', '#d45087'];
-
-        // Sort by value and take top 5 + Others
-        const entries = Object.entries(categoryMap)
-            .sort(([, a], [, b]) => b - a);
-
-        return entries.map(([name, value], index) => ({
-            name,
-            value,
-            color: COLORS[index % COLORS.length]
-        }));
-    }, [transactions, currentMonth]);
+        return Object.entries(categoryMap)
+            .sort(([, a], [, b]) => b - a)
+            .map(([name, value], index) => ({ name, value, color: COLORS[index % COLORS.length] }));
+    }, [filteredTransactions]);
 
     // AI Insight Trigger
     // AI Insight Trigger
@@ -264,6 +327,18 @@ export function FinanceDashboard() {
                 <div className="p-8 pb-4">
                     {/* Balance */}
                     <div className="text-center mb-8 pt-4">
+                        {/* Period Filter */}
+                        <div className="flex justify-center mb-6">
+                            <Tabs value={periodFilter} onValueChange={(v) => setPeriodFilter(v as any)} className="w-[300px]">
+                                <TabsList className="grid w-full grid-cols-4 rounded-full bg-gray-100 dark:bg-zinc-800 p-1">
+                                    <TabsTrigger value="day" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Dia</TabsTrigger>
+                                    <TabsTrigger value="week" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Sem</TabsTrigger>
+                                    <TabsTrigger value="month" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Mês</TabsTrigger>
+                                    <TabsTrigger value="year" className="rounded-full text-xs py-1 data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-700 data-[state=active]:shadow-sm">Ano</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">Saldo em contas</p>
                         <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
                             {showBalance
@@ -289,7 +364,7 @@ export function FinanceDashboard() {
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Receitas</p>
                                     <p className="text-green-600 font-bold text-lg">
-                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
+                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeTotal) : "••••"}
                                     </p>
                                 </div>
                             </div>
@@ -333,7 +408,7 @@ export function FinanceDashboard() {
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Despesas</p>
                                     <p className="text-red-500 font-bold text-lg">
-                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
+                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseTotal) : "••••"}
                                     </p>
                                 </div>
                             </div>
