@@ -30,6 +30,15 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Transaction } from "@/hooks/use-finance";
 
 export function FinanceDashboard() {
@@ -58,23 +67,36 @@ export function FinanceDashboard() {
     };
 
     // Filters State
-    const [selectedCategoryId, setSelectedCategoryId] = useState<string>('all');
-    const [selectedCardId, setSelectedCardId] = useState<string>('all');
+    const [incomeCategoryId, setIncomeCategoryId] = useState<string>('all');
+    const [incomeWalletId, setIncomeWalletId] = useState<string>('all');
+    const [expenseCategoryId, setExpenseCategoryId] = useState<string>('all');
+    const [expenseSourceId, setExpenseSourceId] = useState<string>('all');
 
     // Filtered Transactions Calculation
     const filteredTransactions = useMemo(() => {
-        let filtered = transactions;
+        return transactions.filter(t => {
+            if (t.type === 'income') {
+                if (incomeCategoryId !== 'all' && t.category_id !== incomeCategoryId) return false;
+                if (incomeWalletId !== 'all' && t.wallet_id !== incomeWalletId) return false;
+                return true;
+            } else if (t.type === 'expense') {
+                if (expenseCategoryId !== 'all' && t.category_id !== expenseCategoryId) return false;
 
-        if (selectedCategoryId !== 'all') {
-            filtered = filtered.filter(t => t.category_id === selectedCategoryId);
-        }
-
-        if (selectedCardId !== 'all') {
-            filtered = filtered.filter(t => t.credit_card_id === selectedCardId);
-        }
-
-        return filtered;
-    }, [transactions, selectedCategoryId, selectedCardId]);
+                if (expenseSourceId !== 'all') {
+                    const [sourceType, sourceId] = expenseSourceId.split(':');
+                    if (sourceType === 'card') {
+                        if (t.credit_card_id !== sourceId) return false;
+                    } else if (sourceType === 'wallet') {
+                        if (t.wallet_id !== sourceId) return false;
+                        // Ideally ensure it's not a credit payment if that's distinct, but usually wallet_id implication is enough for non-credit transactions logic if they are separated. 
+                        // For now, if wallet_id matches, it's included.
+                    }
+                }
+                return true;
+            }
+            return true;
+        });
+    }, [transactions, incomeCategoryId, incomeWalletId, expenseCategoryId, expenseSourceId]);
 
     const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0);
 
@@ -235,29 +257,7 @@ export function FinanceDashboard() {
             </AlertDialog>
 
             {/* Filters */}
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-                <select
-                    className="bg-white dark:bg-card border-none text-sm font-medium py-2 px-4 rounded-full shadow-sm outline-none ring-0 w-auto min-w-[120px]"
-                    value={selectedCategoryId}
-                    onChange={(e) => setSelectedCategoryId(e.target.value)}
-                >
-                    <option value="all">Todas Categorias</option>
-                    {categories.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                </select>
 
-                <select
-                    className="bg-white dark:bg-card border-none text-sm font-medium py-2 px-4 rounded-full shadow-sm outline-none ring-0 w-auto min-w-[120px]"
-                    value={selectedCardId}
-                    onChange={(e) => setSelectedCardId(e.target.value)}
-                >
-                    <option value="all">Todos Cartões</option>
-                    {creditCards.map(card => (
-                        <option key={card.id} value={card.id}>{card.name}</option>
-                    ))}
-                </select>
-            </div>
 
             {/* MAIN SUMMARY CARD */}
             <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-card">
@@ -277,32 +277,101 @@ export function FinanceDashboard() {
                     </div>
 
                     {/* Income / Expsense Row */}
-                    <div className="flex justify-between items-center px-4 md:px-8 pb-6 w-full">
+                    {/* Income / Expsense Row */}
+                    <div className="flex flex-col md:flex-row gap-6 justify-between px-2 md:px-4 pb-2 w-full">
+
                         {/* Receitas - Aligned Left */}
-                        <div className="flex items-center gap-3 w-1/2 justify-start">
-                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-green-100 flex items-center justify-center">
-                                <ArrowUpCircle className="h-6 w-6 text-green-600" />
+                        <div className="flex-1 flex flex-col gap-3 min-w-[280px]">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-green-100 flex items-center justify-center">
+                                    <ArrowUpCircle className="h-6 w-6 text-green-600" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 font-medium">Receitas</p>
+                                    <p className="text-green-600 font-bold text-lg">
+                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Receitas</p>
-                                <p className="text-green-600 font-bold text-sm">
-                                    {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
-                                </p>
+
+                            {/* Income Filters */}
+                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                <Select value={incomeCategoryId} onValueChange={setIncomeCategoryId}>
+                                    <SelectTrigger className="h-8 text-xs bg-gray-50 dark:bg-zinc-800 border-none rounded-lg">
+                                        <SelectValue placeholder="Categoria" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todas as Categorias</SelectItem>
+                                        {categories.filter(c => c.type === 'income').map(cat => (
+                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Select value={incomeWalletId} onValueChange={setIncomeWalletId}>
+                                    <SelectTrigger className="h-8 text-xs bg-gray-50 dark:bg-zinc-800 border-none rounded-lg">
+                                        <SelectValue placeholder="Banco" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todos os Bancos</SelectItem>
+                                        {wallets.map(wallet => (
+                                            <SelectItem key={wallet.id} value={wallet.id}>{wallet.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
-                        <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800 mx-2" />
+                        <div className="hidden md:block w-px bg-gray-200 dark:bg-zinc-800 mx-2 self-stretch" />
 
-                        {/* Despesas - Aligned Right */}
-                        <div className="flex items-center gap-3 w-1/2 justify-end text-right flex-row-reverse">
-                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-red-100 flex items-center justify-center">
-                                <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                        {/* Despesas - Aligned Right (visually, but content is left-aligned in column) */}
+                        <div className="flex-1 flex flex-col gap-3 min-w-[280px]">
+                            <div className="flex items-center justify-end gap-3 text-right flex-row-reverse">
+                                <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-red-100 flex items-center justify-center">
+                                    <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 font-medium">Despesas</p>
+                                    <p className="text-red-500 font-bold text-lg">
+                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
+                                    </p>
+                                </div>
                             </div>
-                            <div className="text-right">
-                                <p className="text-xs text-gray-500 font-medium">Despesas</p>
-                                <p className="text-red-500 font-bold text-sm">
-                                    {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
-                                </p>
+
+                            {/* Expense Filters */}
+                            <div className="grid grid-cols-2 gap-2 mt-1">
+                                <Select value={expenseCategoryId} onValueChange={setExpenseCategoryId}>
+                                    <SelectTrigger className="h-8 text-xs bg-gray-50 dark:bg-zinc-800 border-none rounded-lg">
+                                        <SelectValue placeholder="Categoria" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todas as Categorias</SelectItem>
+                                        {categories.filter(c => c.type === 'expense').map(cat => (
+                                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Select value={expenseSourceId} onValueChange={setExpenseSourceId}>
+                                    <SelectTrigger className="h-8 text-xs bg-gray-50 dark:bg-zinc-800 border-none rounded-lg">
+                                        <SelectValue placeholder="Origem" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">Todas as Origens</SelectItem>
+                                        <SelectGroup>
+                                            <SelectLabel>Cartões de Crédito</SelectLabel>
+                                            {creditCards.map(card => (
+                                                <SelectItem key={card.id} value={`card:${card.id}`}>{card.name}</SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                        <SelectGroup>
+                                            <SelectLabel>Contas / Dinheiro</SelectLabel>
+                                            {wallets.map(wallet => (
+                                                <SelectItem key={wallet.id} value={`wallet:${wallet.id}`}>{wallet.name}</SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </div>
