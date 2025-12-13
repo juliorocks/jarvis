@@ -33,13 +33,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
                     {/* Main Content Area */}
                     <main className="flex-1 overflow-y-auto px-2 py-4 md:p-6 animate-in fade-in duration-500 bg-[#F2F4F8] dark:bg-zinc-950">
-                        <div className="container mx-auto max-w-5xl space-y-4 md:space-y-6 pb-28 md:pb-0 px-0 md:px-2">
+                        <div className="container mx-auto max-w-5xl space-y-4 md:space-y-6 pb-32 md:pb-0 px-0 md:px-2">
                             {children}
                         </div>
                     </main>
 
                     <div className="md:hidden">
-                        <BottomNav />
+                        <BottomNav withSpacer={false} />
                     </div>
                 </div>
 

@@ -14,7 +14,12 @@ interface NavItem {
     primary?: boolean;
 }
 
-export function BottomNav() {
+interface BottomNavProps {
+    withSpacer?: boolean;
+    className?: string;
+}
+
+export function BottomNav({ withSpacer = true, className }: BottomNavProps) {
     const pathname = usePathname();
 
     const links: NavItem[] = [
@@ -27,50 +32,54 @@ export function BottomNav() {
 
     return (
         <>
-            <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur-md pb-safe-area-inset-bottom md:hidden z-50">
-                <nav className="flex justify-around items-center h-20 px-2 pb-2">
-                    {links.map((link) => {
-                        const Icon = link.icon;
-                        const isActive = pathname === link.href;
+            return (
+            <>
+                <div className={cn("fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur-md pb-safe-area-inset-bottom md:hidden z-50", className)}>
+                    <nav className="flex justify-around items-center h-20 px-2 pb-2">
+                        {links.map((link) => {
+                            const Icon = link.icon;
+                            const isActive = pathname === link.href;
 
-                        if (link.primary) {
+                            if (link.primary) {
+                                return (
+                                    <div key={link.label} className="relative -top-5">
+                                        <JarvisAssistant
+                                            trigger={
+                                                <Button
+                                                    size="icon"
+                                                    className="h-14 w-14 rounded-full shadow-xl bg-gradient-to-tr from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-transform active:scale-95 border-4 border-background"
+                                                >
+                                                    <Icon className="h-6 w-6" />
+                                                    <span className="sr-only">{link.label}</span>
+                                                </Button>
+                                            }
+                                        />
+                                    </div>
+                                );
+                            }
+
                             return (
-                                <div key={link.label} className="relative -top-5">
-                                    <JarvisAssistant
-                                        trigger={
-                                            <Button
-                                                size="icon"
-                                                className="h-14 w-14 rounded-full shadow-xl bg-gradient-to-tr from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transition-transform active:scale-95 border-4 border-background"
-                                            >
-                                                <Icon className="h-6 w-6" />
-                                                <span className="sr-only">{link.label}</span>
-                                            </Button>
-                                        }
-                                    />
-                                </div>
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    className={cn(
+                                        "flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95",
+                                        isActive
+                                            ? "text-primary font-semibold"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+                                    <span className="text-[10px]">{link.label}</span>
+                                </Link>
                             );
-                        }
-
-                        return (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                className={cn(
-                                    "flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors active:scale-95",
-                                    isActive
-                                        ? "text-primary font-semibold"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className="text-[10px]">{link.label}</span>
-                            </Link>
-                        );
-                    })}
-                </nav>
-            </div>
-            {/* Spacer for content to not be hidden behind nav */}
-            <div className="h-24 md:hidden" />
+                        })}
+                    </nav>
+                </div>
+                {/* Spacer for content to not be hidden behind nav */}
+                {withSpacer && <div className="h-24 md:hidden" />}
+            </>
+            );
         </>
     );
 }
