@@ -101,8 +101,11 @@ export async function getUsers(query = "", planFilter = "all") {
         const isAdminByEmail = user.email?.toLowerCase() === 'jhowmktoficial@gmail.com';
 
         if (!isAdminInDb && !isAdminByEmail) {
+            console.error("Access Denied. DB Role:", profile?.role, "Email:", user.email);
             throw new Error("Unauthorized: Admin Access Required");
         }
+
+        console.log("Admin Access Granted via:", isAdminInDb ? "DB Role" : "Email Override");
 
         // 1. Fetch Profiles
         let dbQuery = supabase
