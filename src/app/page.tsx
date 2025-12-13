@@ -110,7 +110,7 @@ export default function LandingPage() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium text-muted-foreground">Você diz:</p>
-                                            <p className="text-base font-semibold">"Gastei 45 reais no almoço com o cliente."</p>
+                                            <p className="text-base font-semibold">&quot;Gastei 45 reais no almoço com o cliente.&quot;</p>
                                         </div>
                                     </div>
 
@@ -120,7 +120,7 @@ export default function LandingPage() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium text-muted-foreground">Jarvis faz:</p>
-                                            <p className="text-base font-semibold">Registra despesa de R$ 45,00 em "Alimentação".</p>
+                                            <p className="text-base font-semibold">Registra despesa de R$ 45,00 em &quot;Alimentação&quot;.</p>
                                         </div>
                                     </div>
                                 </div>
