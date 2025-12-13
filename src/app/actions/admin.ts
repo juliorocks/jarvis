@@ -100,20 +100,10 @@ export async function getUsers(query = "", planFilter = "all") {
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
     if (profile?.role !== "admin") throw new Error("Unauthorized");
 
+    // 1. Fetch Profiles
     let dbQuery = supabase
         .from("profiles")
-        .select(`
-            *,
-            family_members (
-                role,
-                family_id,
-                families (
-                    id,
-                    name,
-                    owner_id
-                )
-            )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
     if (query) {
@@ -124,44 +114,63 @@ export async function getUsers(query = "", planFilter = "all") {
     }
 
     const { data: profiles, error } = await dbQuery;
+    if (error) throw new Error("Erro ao buscar perfis: " + error.message);
 
-    if (error) throw new Error(error.message);
+    if (!profiles || profiles.length === 0) return [];
 
-    // Post-process to Group by Family
-    // We want to identify "Heads of Families" (Owners or Individuals)
-    // and "Guests" (Members who are NOT owners).
+    // 2. Fetch Family Data manually to avoid complex Joins/RLS issues/FK missing errors
+    // distinct user IDs
+    const userIds = profiles.map(p => p.id);
 
-    // Map: FamilyID -> { owner: Profile, members: Profile[] }
-    // Standalone users (no family or owner of 1-person family) -> Just show.
+    // Fetch memberships for these users
+    // Note: Admin needs RLS policy to see family_members!
+    const { data: memberships, error: memError } = await supabase
+        .from("family_members")
+        .select("user_id, role, family_id")
+        .in("user_id", userIds);
 
-    // For simplicity in this iteration:
-    // We will attach "familyRole" to each user.
-    // Front-end will handle the grouping visualization? 
-    // Actually, user wants "Guest should appear when clicking".
-    // This implies hierarchical data structure.
+    if (memError) {
+        console.error("Erro ao buscar membros de família:", memError);
+        // Continue without family data if fails? Or throw?
+        // Let's log and continue, treating as standalone for now, but valid.
+    }
 
-    const familiesMap: Record<string, { owner?: any, members: any[] }> = {};
+    // Fetch Family Details
+    const familyIds = memberships?.map(m => m.family_id) || [];
+    let families: any[] = [];
+    if (familyIds.length > 0) {
+        const { data: fams, error: famError } = await supabase
+            .from("families")
+            .select("id, name, owner_id")
+            .in("id", familyIds);
+
+        if (fams) families = fams;
+    }
+
+    // 3. Merge Data in Memory
+    const familiesMap: Record<string, { owner?: any, members: any[], familyName?: string }> = {};
     const standaloneUsers: any[] = [];
 
-    // 1. Distribute users
+    // Helper to find membership
+    const getMembership = (uid: string) => memberships?.find(m => m.user_id === uid);
+    const getFamily = (fid: string) => families.find(f => f.id === fid);
+
     profiles.forEach((p: any) => {
-        // Determine primary family (heuristic: first membership found)
-        const membership = p.family_members?.[0];
+        const mem = getMembership(p.id);
 
-        if (membership) {
-            const familyId = membership.family_id;
-            const role = membership.role;
+        if (mem) {
+            const family = getFamily(mem.family_id);
+            const familyId = mem.family_id;
 
-            p.familyRole = role; // 'owner' | 'member' | 'admin'
-            p.familyName = membership.families?.name;
+            p.familyRole = mem.role;
+            p.familyName = family?.name;
             p.familyId = familyId;
 
-            // Initialize Group
             if (!familiesMap[familyId]) {
-                familiesMap[familyId] = { members: [] };
+                familiesMap[familyId] = { members: [], familyName: family?.name };
             }
 
-            if (role === 'owner') {
+            if (mem.role === 'owner') {
                 familiesMap[familyId].owner = p;
             } else {
                 familiesMap[familyId].members.push(p);
@@ -172,30 +181,21 @@ export async function getUsers(query = "", planFilter = "all") {
         }
     });
 
-    // 2. Build final list
-    // Return a flat list of "Rows", where some rows are "Family Owners" containing "Guests".
-    // Or return structured data. Let's return structured data.
-    // Front-end expects array. We can return array of "User | FamilyGroup"?
-    // Let's stick to returning array of Users, but with attached 'guests' property for Owners.
-
     const result: any[] = [];
-
-    // Add Standalone
     result.push(...standaloneUsers);
 
-    // Process Families
     Object.values(familiesMap).forEach(fam => {
         if (fam.owner) {
-            // Attach guests to owner
             fam.owner.guests = fam.members;
             result.push(fam.owner);
         } else {
-            // Orphaned members? Just add them as individual rows for now to avoid hiding them.
+            // Orphaned members or Owner not in current filter page?
+            // Just add them flat
             result.push(...fam.members);
         }
     });
 
-    // Sort by created_at desc again
+    // Sort by created_at desc
     result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
     return result;
