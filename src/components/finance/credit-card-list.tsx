@@ -49,7 +49,7 @@ export function CreditCardList() {
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between pt-6">
                 <CardTitle className="text-lg font-medium flex items-center gap-2">
                     <CreditCardIcon className="h-5 w-5" />
                     Cartões de Crédito
@@ -93,7 +93,7 @@ export function CreditCardList() {
                     </DialogContent>
                 </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-6">
                 {creditCards.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground text-sm">
                         Nenhum cartão cadastrado.

@@ -86,7 +86,7 @@ export function WalletList() {
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between pt-6">
                 <CardTitle className="text-lg font-medium flex items-center gap-2">
                     <WalletIcon className="h-5 w-5" />
                     Contas Bancárias
@@ -96,7 +96,7 @@ export function WalletList() {
                     Nova Conta
                 </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pb-6">
                 {wallets.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground text-sm">
                         Nenhuma conta cadastrada.
