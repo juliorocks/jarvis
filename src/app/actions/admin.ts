@@ -227,13 +227,13 @@ export async function getUsers(query = "", planFilter = "all") {
         // Sort by created_at desc
         result.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
-        return result;
+        // Ensure serializability
+        return JSON.parse(JSON.stringify(result));
 
     } catch (e: any) {
         console.error("CRITICAL ERROR in getUsers:", e);
-        // Instead of throwing 500 to client, return empty array so page renders (and maybe shows empty state)
-        // Or throw a clean error message
-        throw new Error(e.message || "Erro desconhecido ao carregar usuários.");
+        // Return empty array to prevent 500 crash on frontend
+        return [];
     }
 }
 
