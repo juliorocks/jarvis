@@ -77,12 +77,69 @@ export async function getAdminStats() {
 
     const chartData = Array.from(monthsMap.values());
 
+    // 1b. Enhance New Users with Family Data
+    const enrichedNewUsers = await Promise.all(newUsers?.map(async (u: any) => {
+        // Default role
+        let roleDisplay = "Usuário";
+
+        try {
+            // Check membership
+            // Note: Loops inside map are not ideal for performance but fine for limit(5)
+            const { data: member } = await supabase
+                .from("family_members")
+                .select("role, family_id")
+                .eq("user_id", u.id)
+                .single();
+
+            if (member) {
+                if (member.role === 'owner') {
+                    roleDisplay = "Proprietário";
+                } else {
+                    // It's a guest, find the owner
+                    const { data: family } = await supabase
+                        .from("families")
+                        .select("owner_id")
+                        .eq("id", member.family_id)
+                        .single();
+
+                    if (family?.owner_id) {
+                        const { data: ownerProfile } = await supabase
+                            .from("profiles")
+                            .select("full_name")
+                            .eq("id", family.owner_id)
+                            .single();
+
+                        roleDisplay = `Convidado de ${ownerProfile?.full_name?.split(' ')[0] || 'Alguém'}`;
+                    } else {
+                        roleDisplay = "Membro de Família";
+                    }
+                }
+            } else {
+                // If no family, maybe check if they are owner of a family where they are not listed as member? 
+                // (Schema implies owner is usually member too, but let's be safe)
+                const { data: ownedFamily } = await supabase
+                    .from("families")
+                    .select("id")
+                    .eq("owner_id", u.id)
+                    .single();
+
+                if (ownedFamily) roleDisplay = "Proprietário";
+            }
+        } catch (err) {
+            // Ignore errors for individual user enhancement
+            console.log("Error enriching user", u.id, err);
+        }
+
+        return { ...u, roleDisplay };
+    }) || []);
+
+
     return {
         totalUsers: totalUsers || 0,
         activeUsers: activeUsers || 0,
         trialUsers: trialUsers || 0,
         suspendedUsers: suspendedUsers || 0,
-        newUsers: newUsers || [],
+        newUsers: enrichedNewUsers,
         chartData
     };
 }

@@ -228,13 +228,20 @@ export default function AdminDashboard() {
                                         </Avatar>
                                         <div className="space-y-1">
                                             <p className="text-sm font-semibold leading-none text-gray-900 dark:text-gray-100">{user.full_name || "Sem Nome"}</p>
-                                            <p className="text-xs text-muted-foreground">{user.email}</p>
+                                            <div className="flex flex-col">
+                                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                                                {user.roleDisplay && (
+                                                    <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                                                        {user.roleDisplay}
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="text-right flex flex-col items-end gap-1">
                                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${user.plan_status === 'active' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                                                user.plan_status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
-                                                    'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                            user.plan_status === 'suspended' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' :
+                                                'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
                                             }`}>
                                             {user.plan_type}
                                         </span>
