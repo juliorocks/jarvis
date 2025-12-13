@@ -11,10 +11,21 @@ CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
 CREATE INDEX IF NOT EXISTS idx_profiles_plan_status ON profiles(plan_status);
 
 -- RLS: Allow Admins to View/Edit ALL profiles
-CREATE POLICY "Admins can view and edit all profiles" ON profiles
-FOR ALL USING (
-    (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
-);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_policies
+        WHERE tablename = 'profiles'
+        AND policyname = 'Admins can view and edit all profiles'
+    ) THEN
+        CREATE POLICY "Admins can view and edit all profiles" ON profiles
+        FOR ALL USING (
+            (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'
+        );
+    END IF;
+END
+$$;
 
 -- RLS: Allow Admins to View ALL transactions (and other tables)
 -- Note: You might need to add similar policies to 'transactions', 'wallets', etc if you want admins to see user data.
