@@ -72,8 +72,6 @@ export function Sidebar({ className }: SidebarProps) {
         },
     ];
 
-    console.log("Current Profile Role:", profile?.role);
-
     if (profile?.role === 'admin') {
         navItems.push({
             title: "Admin",
