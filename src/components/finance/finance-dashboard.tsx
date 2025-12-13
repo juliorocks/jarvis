@@ -62,6 +62,21 @@ export function FinanceDashboard() {
     const [expenseCategoryId, setExpenseCategoryId] = useState<string>('all');
     const [expenseSourceId, setExpenseSourceId] = useState<string>('all');
 
+    const handleEdit = (transaction: Transaction) => {
+        setEditingTransaction(transaction);
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (deletingId) {
+            await deleteTransaction(deletingId);
+            setDeletingId(null);
+        }
+    };
+    const [incomeWalletId, setIncomeWalletId] = useState<string>('all');
+    const [expenseCategoryId, setExpenseCategoryId] = useState<string>('all');
+    const [expenseSourceId, setExpenseSourceId] = useState<string>('all');
+
     // Filtered Transactions Calculation
     const filteredTransactions = useMemo(() => {
         const now = new Date();
