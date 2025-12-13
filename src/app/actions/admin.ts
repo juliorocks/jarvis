@@ -57,12 +57,21 @@ export async function getAdminStats() {
         suspendedUsers: suspendedUsers || 0,
         newUsers: newUsers || []
     };
+}
+
+export async function getUsers(query = "", planFilter = "all") {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    // Check Admin Role
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
     if (profile?.role !== "admin") throw new Error("Unauthorized");
 
     let dbQuery = supabase.from("profiles").select("*").order("updated_at", { ascending: false });
 
     if (query) {
-        dbQuery = dbQuery.ilike("full_name", `%${query}%`); // or email
+        dbQuery = dbQuery.ilike("full_name", `%${query}%`);
     }
     if (planFilter !== "all") {
         dbQuery = dbQuery.eq("plan_type", planFilter);
