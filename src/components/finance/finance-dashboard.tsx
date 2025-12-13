@@ -54,6 +54,7 @@ export function FinanceDashboard() {
     // New Features State
     // Filters State
     const [periodFilter, setPeriodFilter] = useState<'day' | 'week' | 'month' | 'year'>('month');
+    const [aiInsights, setAiInsights] = useState<any>(null);
 
     // Category/Source Filters
     const [incomeCategoryId, setIncomeCategoryId] = useState<string>('all');
