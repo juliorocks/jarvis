@@ -79,190 +79,43 @@ export default function DashboardPage() {
                 </Button>
             </div>
 
-            {/* Daily Briefing Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Quick Access Buttons */}
+            <div className="grid gap-6 md:grid-cols-3">
                 <Link href="/finance">
-                    <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Financeiro</CardTitle>
-                            <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{formatCurrency(totalBalance)}</div>
-                            <p className="text-xs text-muted-foreground">
-                                Saldo total atual
-                            </p>
-                        </CardContent>
+                    <Card className="hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-lg border-none bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/40 h-40 flex flex-col items-center justify-center gap-4 group">
+                        <div className="p-4 bg-blue-500 rounded-full text-white shadow-lg group-hover:bg-blue-600 transition-colors">
+                            <CreditCard className="h-8 w-8" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-bold text-lg text-blue-900 dark:text-blue-100">Financeiro</h3>
+                            <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Gerenciar ganhos e gastos</p>
+                        </div>
                     </Card>
                 </Link>
 
                 <Link href="/calendar">
-                    <Card className="hover:bg-accent/50 transition-colors cursor-pointer h-full">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Agenda</CardTitle>
-                            <ListTodo className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">Ver Agenda</div>
-                            <p className="text-xs text-muted-foreground">
-                                Gerenciar compromissos
-                            </p>
-                        </CardContent>
+                    <Card className="hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-lg border-none bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-orange-900/40 h-40 flex flex-col items-center justify-center gap-4 group">
+                        <div className="p-4 bg-orange-500 rounded-full text-white shadow-lg group-hover:bg-orange-600 transition-colors">
+                            <ListTodo className="h-8 w-8" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="font-bold text-lg text-orange-900 dark:text-orange-100">Agenda</h3>
+                            <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">Seus compromissos</p>
+                        </div>
                     </Card>
                 </Link>
-            </div>
 
-            {/* CHARTS */}
-            <div className="space-y-6">
-                {/* Bar Chart Row */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-base font-medium">
-                            Gastos ({range === 'week' ? 'Semana' : range === 'month' ? 'Mês' : 'Ano'})
-                        </CardTitle>
-                        <div className="flex bg-muted rounded-md p-0.5">
-                            <button onClick={() => setRange('week')} className={`text-xs px-3 py-1.5 rounded-sm transition-all font-medium ${range === 'week' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Semana</button>
-                            <button onClick={() => setRange('month')} className={`text-xs px-3 py-1.5 rounded-sm transition-all font-medium ${range === 'month' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Mês</button>
-                            <button onClick={() => setRange('year')} className={`text-xs px-3 py-1.5 rounded-sm transition-all font-medium ${range === 'year' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>Ano</button>
+                <Link href="/brain">
+                    <Card className="hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer shadow-md hover:shadow-lg border-none bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/40 dark:to-purple-900/40 h-40 flex flex-col items-center justify-center gap-4 group">
+                        <div className="p-4 bg-purple-500 rounded-full text-white shadow-lg group-hover:bg-purple-600 transition-colors">
+                            <Eye className="h-8 w-8" />
                         </div>
-                    </CardHeader>
-                    <CardContent className="pl-2">
-                        <div className="h-[300px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={analytics.chartData}>
-                                    <XAxis
-                                        dataKey="date_key"
-                                        stroke="#888888"
-                                        fontSize={12}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickFormatter={(value) => {
-                                            if (!value) return '';
-                                            const date = new Date(value + 'T12:00:00');
-                                            if (range === 'year') return format(date, 'MMM', { locale: ptBR });
-                                            return format(date, range === 'week' ? 'EEE' : 'dd', { locale: ptBR });
-                                        }}
-                                    />
-                                    <YAxis
-                                        stroke="#888888"
-                                        fontSize={12}
-                                        tickLine={false}
-                                        axisLine={false}
-                                        tickFormatter={(value) => privacyMode ? "•" : `R$${value}`}
-                                    />
-                                    <Tooltip
-                                        cursor={{ fill: 'transparent' }}
-                                        formatter={(value: number) => [formatCurrency(value), 'Valor']}
-                                        labelFormatter={(label) => {
-                                            if (!label) return '';
-                                            const date = new Date(label + 'T12:00:00');
-                                            return format(date, range === 'year' ? 'MMMM yyyy' : "dd 'de' MMM", { locale: ptBR });
-                                        }}
-                                        contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                    />
-                                    <Bar dataKey="total" radius={[4, 4, 0, 0]}>
-                                        {analytics.chartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={privacyMode ? "#e5e7eb" : "currentColor"} className="fill-primary" />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                        <div className="text-center">
+                            <h3 className="font-bold text-lg text-purple-900 dark:text-purple-100">Ideias</h3>
+                            <p className="text-xs text-purple-700 dark:text-purple-300 font-medium">Seu segundo cérebro</p>
                         </div>
-                    </CardContent>
-                </Card>
-
-                {/* Pie Charts Row */}
-                <div className="grid gap-4 md:grid-cols-2">
-                    {/* Expense Pie */}
-                    <Card className="flex flex-col">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base font-medium">Despesas por Categoria</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 pb-4">
-                            <div className="h-[250px] w-full relative">
-                                {analytics.expensePie.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={analytics.expensePie}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
-                                                paddingAngle={2}
-                                                dataKey="value"
-                                            >
-                                                {analytics.expensePie.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} strokeWidth={1} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip formatter={(value: number) => privacyMode ? '•••••' : formatCurrency(value)} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex h-full items-center justify-center text-muted-foreground text-sm">Sem dados</div>
-                                )}
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                    <div className="text-center">
-                                        <span className="text-2xl font-bold">
-                                            {privacyMode ? '•' : analytics.expensePie.length}
-                                        </span>
-                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Categorias</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 justify-center px-4">
-                                {analytics.expensePie.slice(0, 6).map((entry, i) => (
-                                    <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || COLORS[i % COLORS.length] }} />
-                                        <span>{entry.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
                     </Card>
-
-                    {/* Income Pie */}
-                    <Card className="flex flex-col">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base font-medium">Receitas por Categoria</CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex-1 pb-4">
-                            <div className="h-[250px] w-full relative">
-                                {analytics.incomePie.length > 0 ? (
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={analytics.incomePie}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
-                                                paddingAngle={2}
-                                                dataKey="value"
-                                            >
-                                                {analytics.incomePie.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} strokeWidth={1} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip formatter={(value: number) => privacyMode ? '•••••' : formatCurrency(value)} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                ) : (
-                                    <div className="flex h-full items-center justify-center text-muted-foreground text-sm">Sem dados</div>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 justify-center px-4">
-                                {analytics.incomePie.slice(0, 6).map((entry, i) => (
-                                    <div key={i} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || COLORS[i % COLORS.length] }} />
-                                        <span>{entry.name}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+                </Link>
             </div>
 
 

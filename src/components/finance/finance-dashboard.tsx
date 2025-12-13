@@ -57,18 +57,33 @@ export function FinanceDashboard() {
         }
     };
 
+    // Filtered Transactions Calculation
+    const filteredTransactions = useMemo(() => {
+        let filtered = transactions;
+
+        if (selectedCategoryId !== 'all') {
+            filtered = filtered.filter(t => t.category_id === selectedCategoryId);
+        }
+
+        if (selectedCardId !== 'all') {
+            filtered = filtered.filter(t => t.credit_card_id === selectedCardId);
+        }
+
+        return filtered;
+    }, [transactions, selectedCategoryId, selectedCardId]);
+
     const totalBalance = wallets.reduce((acc, w) => acc + w.balance, 0);
 
-    // Calculate totals for month
+    // Calculate totals for month with FILTERS applied
     const currentMonth = new Date().getMonth();
-    const incomeMonth = transactions
+    const incomeMonth = filteredTransactions
         .filter(t => t.type === 'income' && new Date(t.date).getMonth() === currentMonth)
         .reduce((acc, t) => acc + t.amount, 0);
-    const expenseMonth = transactions
+    const expenseMonth = filteredTransactions
         .filter(t => t.type === 'expense' && new Date(t.date).getMonth() === currentMonth)
         .reduce((acc, t) => acc + t.amount, 0);
 
-    const sortedTransactions = [...transactions].sort((a, b) => {
+    const sortedTransactions = [...filteredTransactions].sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
@@ -215,6 +230,31 @@ export function FinanceDashboard() {
                 </AlertDialogContent>
             </AlertDialog>
 
+            {/* Filters */}
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <select
+                    className="bg-white dark:bg-card border-none text-sm font-medium py-2 px-4 rounded-full shadow-sm outline-none ring-0 w-auto min-w-[120px]"
+                    value={selectedCategoryId}
+                    onChange={(e) => setSelectedCategoryId(e.target.value)}
+                >
+                    <option value="all">Todas Categorias</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                </select>
+
+                <select
+                    className="bg-white dark:bg-card border-none text-sm font-medium py-2 px-4 rounded-full shadow-sm outline-none ring-0 w-auto min-w-[120px]"
+                    value={selectedCardId}
+                    onChange={(e) => setSelectedCardId(e.target.value)}
+                >
+                    <option value="all">Todos Cartões</option>
+                    {creditCards.map(card => (
+                        <option key={card.id} value={card.id}>{card.name}</option>
+                    ))}
+                </select>
+            </div>
+
             {/* MAIN SUMMARY CARD */}
             <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-card">
                 <div className="p-8 pb-4">
@@ -233,8 +273,9 @@ export function FinanceDashboard() {
                     </div>
 
                     {/* Income / Expsense Row */}
-                    <div className="flex justify-between items-center px-4 md:px-12 pb-6">
-                        <div className="flex items-center gap-3">
+                    <div className="flex justify-between items-center px-4 md:px-8 pb-6 w-full">
+                        {/* Receitas - Aligned Left */}
+                        <div className="flex items-center gap-3 w-1/2 justify-start">
                             <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-green-100 flex items-center justify-center">
                                 <ArrowUpCircle className="h-6 w-6 text-green-600" />
                             </div>
@@ -246,13 +287,14 @@ export function FinanceDashboard() {
                             </div>
                         </div>
 
-                        <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800" />
+                        <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800 mx-2" />
 
-                        <div className="flex items-center gap-3">
+                        {/* Despesas - Aligned Right */}
+                        <div className="flex items-center gap-3 w-1/2 justify-end text-right flex-row-reverse">
                             <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-red-100 flex items-center justify-center">
                                 <ArrowDownCircle className="h-6 w-6 text-red-500" />
                             </div>
-                            <div>
+                            <div className="text-right">
                                 <p className="text-xs text-gray-500 font-medium">Despesas</p>
                                 <p className="text-red-500 font-bold text-sm">
                                     {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
