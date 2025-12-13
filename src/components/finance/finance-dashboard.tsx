@@ -270,8 +270,8 @@ export function FinanceDashboard() {
             // Otherwise generate new insights
             const metrics = {
                 totalBalance,
-                incomeMonth,
-                expenseMonth,
+                incomeMonth: incomeTotal,
+                expenseMonth: expenseTotal,
                 transactionCount: transactions.length,
                 lastTransaction: transactions[0]?.description
             };
