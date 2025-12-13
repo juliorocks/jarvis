@@ -33,7 +33,7 @@ import {
 import { Transaction } from "@/hooks/use-finance";
 
 export function FinanceDashboard() {
-    const { wallets, transactions, loading, deleteTransaction } = useFinance();
+    const { wallets, transactions, categories, creditCards, loading, deleteTransaction } = useFinance();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isFamilyOpen, setIsFamilyOpen] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
