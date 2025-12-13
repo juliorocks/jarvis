@@ -213,81 +213,65 @@ export function FinanceDashboard() {
                         <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
-            </AlertDialog>
+            </AlertDialogContent>
+        </AlertDialog>
 
-            {/* Summary Cards */}
-            {/* Summary Cards */}
-            {/* MAIN SUMMARY CARD */}
-            <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white dark:bg-card">
-                <div className="p-6 pb-2">
-                    {/* Header: Month Selector & Avatar placehoder if needed */}
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 dark:bg-zinc-800 overflow-hidden">
-                            {/* Avatar placeholder - typically fetched from profile */}
-                            <div className="flex items-center justify-center h-full w-full text-xs font-bold text-gray-500">YOU</div>
-                        </div>
-                        <div className="flex flex-col items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg px-3 py-1 transition-colors">
-                            <span className="text-sm font-medium flex items-center gap-1">
-                                {format(new Date(), 'MMMMM', { locale: ptBR })} <ChevronDown className="h-3 w-3" />
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-1 text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-full text-xs font-bold">
-                            <Coins className="h-3 w-3 fill-yellow-500" />
-                            <span>1.225</span>
-                        </div>
+            {/* Summary Cards */ }
+    {/* Summary Cards */ }
+    {/* MAIN SUMMARY CARD */ }
+    <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-card">
+        <div className="p-8 pb-4">
+            {/* Balance */}
+            <div className="text-center mb-8 pt-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">Saldo em contas</p>
+                <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {showBalance
+                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)
+                        : "R$ •••••••"
+                    }
+                </h1>
+                <button onClick={() => setShowBalance(!showBalance)} className="mt-2 text-blue-500/50 hover:text-blue-600 transition-colors">
+                    {showBalance ? <Eye className="h-6 w-6 mx-auto" /> : <EyeOff className="h-6 w-6 mx-auto" />}
+                </button>
+            </div>
+
+            {/* Income / Expsense Row */}
+            <div className="flex justify-between items-center px-4 md:px-12 pb-6">
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-green-100 flex items-center justify-center">
+                        <ArrowUpCircle className="h-6 w-6 text-green-600" />
                     </div>
-
-                    {/* Balance */}
-                    <div className="text-center mb-8">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Saldo em contas</p>
-                        <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            {showBalance
-                                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)
-                                : "R$ •••••••"
-                            }
-                        </h1>
-                        <button onClick={() => setShowBalance(!showBalance)} className="mt-2 text-gray-400 hover:text-gray-600 transition-colors">
-                            {showBalance ? <Eye className="h-5 w-5 mx-auto" /> : <EyeOff className="h-5 w-5 mx-auto" />}
-                        </button>
-                    </div>
-
-                    {/* Income / Expsense Row */}
-                    <div className="flex justify-between items-center px-4 md:px-12 pb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <ArrowUpCircle className="h-6 w-6 text-green-600" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Receitas</p>
-                                <p className="text-green-600 font-bold">
-                                    {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800" />
-
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                                <ArrowDownCircle className="h-6 w-6 text-red-500" />
-                            </div>
-                            <div>
-                                <p className="text-xs text-gray-500 font-medium">Despesas</p>
-                                <p className="text-red-500 font-bold">
-                                    {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
-                                </p>
-                            </div>
-                        </div>
+                    <div>
+                        <p className="text-xs text-gray-500 font-medium">Receitas</p>
+                        <p className="text-green-600 font-bold text-sm">
+                            {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeMonth) : "••••"}
+                        </p>
                     </div>
                 </div>
-            </Card>
 
-            {/* Chart Section */}
-            {/* Expenses chart */}
+                <div className="h-8 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-red-100 flex items-center justify-center">
+                        <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                    </div>
+                    <div>
+                        <p className="text-xs text-gray-500 font-medium">Despesas</p>
+                        <p className="text-red-500 font-bold text-sm">
+                            {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseMonth) : "••••"}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Card>
+
+    {/* Chart Section */ }
+    {/* Expenses chart */ }
             <div>
                 <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 px-2">Despesas por categoria</h3>
-                <Card className="border-none shadow-md rounded-3xl overflow-hidden bg-white dark:bg-card p-6">
-                    <div className="h-[250px] w-full flex flex-col md:flex-row items-center justify-center">
+                <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white dark:bg-card p-6">
+                    <div className="h-[300px] w-full flex flex-col md:flex-row items-center justify-center">
                         {categoryData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -305,32 +289,30 @@ export function FinanceDashboard() {
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
-                                    <Tooltip
+                                    <Tooltip 
                                         formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)}
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
                                     />
-                                    <Legend
-                                        layout="vertical"
-                                        verticalAlign="middle"
-                                        align="right"
+                                    <Legend 
+                                        layout="horizontal" 
+                                        verticalAlign="bottom" 
+                                        align="center"
+                                        wrapperStyle={{ paddingTop: '20px' }}
                                         formatter={(value, entry: any) => (
-                                            <span className="text-sm font-medium ml-2 text-gray-600 dark:text-gray-300">
-                                                {value} <span className="text-gray-400 font-normal ml-2">
-                                                    {/* @ts-ignore */}
-                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.payload.value)}
-                                                </span>
+                                            <span className="text-xs font-medium ml-1 text-gray-600 dark:text-gray-300">
+                                                {value}
                                             </span>
                                         )}
                                     />
                                 </PieChart>
                             </ResponsiveContainer>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                                 <div className="h-24 w-24 rounded-full border-4 border-muted flex items-center justify-center mb-2">
-                                    <span className="text-3xl">🤷‍♂️</span>
+                                     <span className="text-3xl">🤷‍♂️</span>
                                 </div>
                                 <p>Sem despesas este mês</p>
-                            </div>
+                             </div>
                         )}
                     </div>
                 </Card>
@@ -362,111 +344,113 @@ export function FinanceDashboard() {
 
             <FamilySettings open={isFamilyOpen} onOpenChange={setIsFamilyOpen} />
 
-            {/* Transactions List */}
-            <Card>
-                <CardContent className="p-0">
-                    {loading ? (
-                        <div className="p-8 text-center text-muted-foreground">Carregando...</div>
-                    ) : sortedTransactions.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
-                    ) : (
-                        <div className="divide-y">
-                            {sortedTransactions.map((t) => {
-                                let bgClass = 'bg-[#92d5b4]'; // Default / Money
-                                if (t.credit_card_id || t.payment_method === 'credit') bgClass = 'bg-[#97bfcb]';
-                                else if (t.payment_method === 'pix') bgClass = 'bg-[#b49aca]';
+    {/* Transactions List */ }
+    <Card>
+        <CardContent className="p-0">
+            {loading ? (
+                <div className="p-8 text-center text-muted-foreground">Carregando...</div>
+            ) : sortedTransactions.length === 0 ? (
+                <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
+            ) : (
+                <div className="divide-y">
+                    {sortedTransactions.map((t) => {
+                        let bgClass = 'bg-[#92d5b4]'; // Default / Money
+                        if (t.credit_card_id || t.payment_method === 'credit') bgClass = 'bg-[#97bfcb]';
+                        else if (t.payment_method === 'pix') bgClass = 'bg-[#b49aca]';
 
-                                return (
-                                    <div
-                                        key={t.id}
-                                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                                        onClick={() => handleEdit(t)}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${bgClass}`}>
-                                                {t.credit_card_id || t.payment_method === 'credit' ? (
-                                                    <CreditCard className="h-5 w-5" />
-                                                ) : t.payment_method === 'pix' ? (
-                                                    <QrCode className="h-5 w-5" />
-                                                ) : (
-                                                    <Banknote className="h-5 w-5" />
-                                                )}
-                                            </div>
-                                            <div className="space-y-1">
-                                                <p className="font-medium leading-none">{t.description}</p>
-                                                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                                    {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
-                                                    {t.profiles && (
-                                                        <>
-                                                            <span>•</span>
-                                                            <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full inline-flex items-center">
-                                                                {t.profiles.full_name?.split(' ')[0] || t.profiles.email?.split('@')[0] || "Desconhecido"}
-                                                            </span>
-                                                        </>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className={`text-sm ${t.type === 'income' ? 'text-[#5cd36b]' : 'text-[#e14948]'}`}>
-                                                {t.type === 'income' ? '+' : '-'}
-                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}
-                                            </div>
-                                            <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleEdit(t)}>
-                                                            <Edit className="mr-2 h-4 w-4" />
-                                                            Editar
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(t.id)}>
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Excluir
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                        </div>
+                        return (
+                            <div
+                                key={t.id}
+                                className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => handleEdit(t)}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white ${bgClass}`}>
+                                        {t.credit_card_id || t.payment_method === 'credit' ? (
+                                            <CreditCard className="h-5 w-5" />
+                                        ) : t.payment_method === 'pix' ? (
+                                            <QrCode className="h-5 w-5" />
+                                        ) : (
+                                            <Banknote className="h-5 w-5" />
+                                        )}
                                     </div>
-                                );
-                            })}
+                                    <div className="space-y-1">
+                                        <p className="font-medium leading-none">{t.description}</p>
+                                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                            {format(new Date(t.date), "dd/MM/yy", { locale: ptBR })}
+                                            {t.profiles && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="text-xs bg-muted px-1.5 py-0.5 rounded-full inline-flex items-center">
+                                                        {t.profiles.full_name?.split(' ')[0] || t.profiles.email?.split('@')[0] || "Desconhecido"}
+                                                    </span>
+                                                </>
+                                            )}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className={`text-sm ${t.type === 'income' ? 'text-[#5cd36b]' : 'text-[#e14948]'}`}>
+                                        {t.type === 'income' ? '+' : '-'}
+                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}
+                                    </div>
+                                    <div className="hidden md:block" onClick={(e) => e.stopPropagation()}>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                    <span className="sr-only">Open menu</span>
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleEdit(t)}>
+                                                    <Edit className="mr-2 h-4 w-4" />
+                                                    Editar
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(t.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />
+                                                    Excluir
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </CardContent>
+    </Card>
+    {/* AI Analysis Section */ }
+    {
+        aiInsights && (
+            <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
+                        <Sparkles className="h-5 w-5" />
+                        Análise Inteligente do Jarvis
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                            <h4 className="font-semibold text-sm mb-1 text-red-600">Sobre suas Despesas</h4>
+                            <p className="text-sm text-muted-foreground">{aiInsights.expensesAnalysis}</p>
                         </div>
-                    )}
+                        <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
+                            <h4 className="font-semibold text-sm mb-1 text-green-600">Sobre suas Receitas</h4>
+                            <p className="text-sm text-muted-foreground">{aiInsights.incomeAnalysis}</p>
+                        </div>
+                    </div>
+                    <div className="p-3 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                        <h4 className="font-semibold text-sm mb-1 text-indigo-800 dark:text-indigo-200">Resumo do Mês</h4>
+                        <p className="text-sm text-indigo-700 dark:text-indigo-300">{aiInsights.overallAnalysis}</p>
+                    </div>
                 </CardContent>
             </Card>
-            {/* AI Analysis Section */}
-            {aiInsights && (
-                <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 border-indigo-100 dark:border-indigo-900">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
-                            <Sparkles className="h-5 w-5" />
-                            Análise Inteligente do Jarvis
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-                                <h4 className="font-semibold text-sm mb-1 text-red-600">Sobre suas Despesas</h4>
-                                <p className="text-sm text-muted-foreground">{aiInsights.expensesAnalysis}</p>
-                            </div>
-                            <div className="p-3 bg-white/50 dark:bg-black/20 rounded-lg">
-                                <h4 className="font-semibold text-sm mb-1 text-green-600">Sobre suas Receitas</h4>
-                                <p className="text-sm text-muted-foreground">{aiInsights.incomeAnalysis}</p>
-                            </div>
-                        </div>
-                        <div className="p-3 bg-indigo-100/50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                            <h4 className="font-semibold text-sm mb-1 text-indigo-800 dark:text-indigo-200">Resumo do Mês</h4>
-                            <p className="text-sm text-indigo-700 dark:text-indigo-300">{aiInsights.overallAnalysis}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
-        </div>
+        )
+    }
+        </div >
     )
 }

@@ -35,7 +35,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
     const [user, setUser] = useState<any>(null);
     const supabase = createClient();
 

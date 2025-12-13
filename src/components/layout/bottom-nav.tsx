@@ -28,7 +28,7 @@ export function BottomNav() {
     return (
         <>
             <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur-md pb-safe-area-inset-bottom md:hidden z-50">
-                <nav className="flex justify-around items-center h-16 px-2">
+                <nav className="flex justify-around items-center h-20 px-2 pb-2">
                     {links.map((link) => {
                         const Icon = link.icon;
                         const isActive = pathname === link.href;
@@ -70,7 +70,7 @@ export function BottomNav() {
                 </nav>
             </div>
             {/* Spacer for content to not be hidden behind nav */}
-            <div className="h-16 md:hidden" />
+            <div className="h-24 md:hidden" />
         </>
     );
 }

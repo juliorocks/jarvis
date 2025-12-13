@@ -103,30 +103,34 @@ export function CreditCardList() {
                         {creditCards.map((card) => {
                             const logo = getBankLogo(card.name);
                             return (
-                                <div key={card.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                                    <div className="flex items-center gap-3">
+                                <div key={card.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0 pt-2">
+                                    <div className="flex items-center gap-4">
                                         {logo ? (
-                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full overflow-hidden flex items-center justify-center shadow-sm">
-                                                <img src={logo} alt={card.name} className="h-full w-full object-cover" />
+                                            <div className="h-12 w-12 min-w-[3rem] rounded-full overflow-hidden bg-white shadow-sm border border-gray-100 flex items-center justify-center p-0.5">
+                                                <img src={logo} alt={card.name} className="h-full w-full object-contain rounded-full" />
                                             </div>
                                         ) : (
-                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-muted flex items-center justify-center">
-                                                <CreditCardIcon className="h-5 w-5 text-muted-foreground" />
+                                            <div className="h-12 w-12 min-w-[3rem] rounded-full bg-gray-100 flex items-center justify-center">
+                                                <CreditCardIcon className="h-6 w-6 text-gray-400" />
                                             </div>
                                         )}
-                                        <div>
-                                            <p className="font-medium">{card.name}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                Fecha dia {card.closing_day} • Vence dia {card.due_day}
-                                            </p>
+                                        <div className="space-y-1">
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100">{card.name}</p>
+                                            <div className="flex flex-col text-xs text-gray-500 dark:text-gray-400">
+                                                <span>Fecha dia {card.closing_day}</span>
+                                                <span className="font-medium text-blue-600 dark:text-blue-400">Vence dia {card.due_day}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-medium text-sm">
+                                    <div className="text-right space-y-1">
+                                        <div>
+                                            <p className="text-[10px] text-gray-500 uppercase font-semibold">Fatura Atual</p>
+                                            <p className="text-sm font-bold text-red-600">
+                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.current_invoice || 0)}
+                                            </p>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400">
                                             Limite: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.limit_amount)}
-                                        </p>
-                                        <p className="text-sm font-bold text-red-600">
-                                            Fatura: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(card.current_invoice || 0)}
                                         </p>
                                     </div>
                                 </div>
