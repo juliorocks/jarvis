@@ -39,9 +39,9 @@ export function CreditCardList() {
         if (card) {
             setEditingCard(card);
             setName(card.name);
-            setLimit(card.limit_amount.toString());
-            setClosingDay(card.closing_day.toString());
-            setDueDay(card.due_day.toString());
+            setLimit(card.limit_amount?.toString() || "");
+            setClosingDay(card.closing_day?.toString() || "");
+            setDueDay(card.due_day?.toString() || "");
         } else {
             setEditingCard(null);
             setName("");
