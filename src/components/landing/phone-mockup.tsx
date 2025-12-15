@@ -66,7 +66,7 @@ function VoiceScreen() {
                         <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                         <p className="text-xs font-medium text-muted-foreground">Ouvindo...</p>
                     </div>
-                    <p className="text-sm font-medium">"Agendar almoço com a Sara amanhã ao meio-dia."</p>
+                    <p className="text-sm font-medium">&quot;Agendar almoço com a Sara amanhã ao meio-dia.&quot;</p>
                 </div>
             </div>
             <div className="h-20" /> {/* Spacer for bottom */}

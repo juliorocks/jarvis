@@ -128,7 +128,7 @@ export default function LandingPage() {
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold mb-6">Agenda Inteligente</h2>
                             <p className="text-xl text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8">
-                                "Já pensou ter toda a sua agenda organizada apenas enviando uma mensagem de voz?"
+                                &quot;Já pensou ter toda a sua agenda organizada apenas enviando uma mensagem de voz?&quot;
                             </p>
                             <ul className="space-y-4">
                                 <FeatureItem text="Adiciona reuniões, consultas e festas automaticamente." />
@@ -176,7 +176,7 @@ export default function LandingPage() {
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold mb-6">Controle Financeiro</h2>
                             <p className="text-xl text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8">
-                                "Controle seus gastos na palma da mão de forma simples e muito prática."
+                                &quot;Controle seus gastos na palma da mão de forma simples e muito prática.&quot;
                             </p>
                             <ul className="space-y-4">
                                 <FeatureItem text="Tirou foto do comprovante? O Jarvis anota." />
@@ -233,7 +233,7 @@ export default function LandingPage() {
             <section className="py-24">
                 <div className="container mx-auto px-4 text-center">
                     <p className="text-2xl font-medium max-w-3xl mx-auto leading-relaxed italic">
-                        "Eu perdia horas tentando lembrar onde gastei meu salário. Com o Jarvis, eu só falo no carro voltando do trabalho e pronto. Minha vida mudou."
+                        &quot;Eu perdia horas tentando lembrar onde gastei meu salário. Com o Jarvis, eu só falo no carro voltando do trabalho e pronto. Minha vida mudou.&quot;
                     </p>
                     <div className="mt-8 flex items-center justify-center gap-4">
                         <div className="h-12 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center font-bold text-lg">M</div>
