@@ -21,9 +21,10 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function WalletList() {
-    const { wallets, addWallet, updateWallet, deleteWallet } = useFinance();
+    const { wallets, addWallet, updateWallet, deleteWallet, loading: isLoading } = useFinance();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [editingWallet, setEditingWallet] = useState<Wallet | null>(null);
@@ -97,7 +98,25 @@ export function WalletList() {
                 </Button>
             </CardHeader>
             <CardContent className="pb-6">
-                {wallets.length === 0 ? (
+                {isLoading ? (
+                    // Skeleton Loading State
+                    <div className="space-y-4">
+                        {[1, 2].map((i) => (
+                            <div key={i} className="flex items-center justify-between pt-2">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-10 w-10 rounded-full" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-3 w-16" />
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <Skeleton className="h-5 w-20" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : wallets.length === 0 ? (
                     <div className="text-center py-6 text-muted-foreground text-sm">
                         Nenhuma conta cadastrada.
                     </div>
@@ -109,8 +128,9 @@ export function WalletList() {
                                 <div key={wallet.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
                                     <div className="flex items-center gap-3">
                                         {logo ? (
-                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full overflow-hidden bg-white border flex items-center justify-center p-1">
-                                                <img src={logo} alt={wallet.name} className="h-full w-full object-contain" />
+                                            <div className="h-10 w-10 min-w-[2.5rem] rounded-full overflow-hidden bg-white border flex items-center justify-center">
+                                                {/* Removed p-1 and used object-cover to fill the circle */}
+                                                <img src={logo} alt={wallet.name} className="h-full w-full object-cover" />
                                             </div>
                                         ) : (
                                             <div className="h-10 w-10 min-w-[2.5rem] rounded-full bg-muted flex items-center justify-center">

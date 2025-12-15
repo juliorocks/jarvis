@@ -80,6 +80,8 @@ interface FinanceContextType {
     addCategory: (category: Omit<TransactionCategory, 'id'>) => Promise<{ data: any, error: any }>
     creditCards: CreditCard[]
     addCreditCard: (card: Omit<CreditCard, 'id'>) => Promise<{ data: any, error: any }>
+    updateCreditCard: (card: CreditCard) => Promise<{ data: any, error: any }>
+    deleteCreditCard: (id: string) => Promise<{ error: any }>
     updateTransaction: (transaction: Transaction) => Promise<{ data: any, error: any }>
     deleteTransaction: (id: string) => Promise<{ error: any }>
     updateWallet: (wallet: Wallet) => Promise<{ data: any, error: any }>
@@ -421,6 +423,40 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    const updateCreditCard = async (card: CreditCard) => {
+        try {
+            const { data, error } = await supabase
+                .from('credit_cards')
+                .update(card)
+                .eq('id', card.id)
+                .select()
+                .single()
+
+            if (error) throw error
+            await fetchData()
+            return { data, error: null }
+        } catch (error) {
+            console.error(error)
+            return { data: null, error }
+        }
+    }
+
+    const deleteCreditCard = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('credit_cards')
+                .delete()
+                .eq('id', id)
+
+            if (error) throw error
+            await fetchData()
+            return { error: null }
+        } catch (error) {
+            console.error(error)
+            return { error }
+        }
+    }
+
     const updateTransaction = async (transaction: Transaction) => {
         try {
             // Remove joined fields before update
@@ -602,6 +638,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
             addCategory,
             creditCards,
             addCreditCard,
+            updateCreditCard,
+            deleteCreditCard,
             updateTransaction,
             deleteTransaction,
             familyId,
