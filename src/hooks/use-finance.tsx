@@ -426,11 +426,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     const updateCreditCard = async (card: CreditCard) => {
         try {
             // Remove joined/calculated fields before update
-            const { current_invoice, ...rest } = card;
+            // Explicitly construct payload to avoid passing unwanted fields
+            const payload = {
+                name: card.name,
+                limit_amount: card.limit_amount,
+                closing_day: card.closing_day,
+                due_day: card.due_day
+            };
 
             const { data, error } = await supabase
                 .from('credit_cards')
-                .update(rest)
+                .update(payload)
                 .eq('id', card.id)
                 .select()
                 .single()

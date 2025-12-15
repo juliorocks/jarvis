@@ -78,6 +78,11 @@
 
 html,
 body {
+  /* overflow-x: hidden; */
+  /* Maybe this is causing the issue if width isn't 100%? Let's just reset standard behavior */
+  width: 100%;
+  margin: 0;
+  padding: 0;
   overflow-x: hidden;
 }
 
