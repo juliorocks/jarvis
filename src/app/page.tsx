@@ -16,10 +16,10 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 selection:bg-blue-100 selection:text-blue-900">
+        <div className="flex flex-col min-h-screen bg-white text-zinc-900 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
 
             {/* --- COMPONENT: NAVBAR --- */}
-            <header className="fixed top-0 w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800">
+            <header className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="bg-blue-600 p-2 rounded-xl">
@@ -28,7 +28,7 @@ export default function LandingPage() {
                         <span className="text-xl font-bold tracking-tight">Jarvis</span>
                     </div>
 
-                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-500">
                         <Link href="#features" className="hover:text-blue-600 transition-colors">Como funciona</Link>
                         <Link href="#pricing" className="hover:text-blue-600 transition-colors">Planos</Link>
                         <Link href="#faq" className="hover:text-blue-600 transition-colors">Dúvidas</Link>
@@ -50,7 +50,7 @@ export default function LandingPage() {
                     <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
-                        className="md:hidden border-b bg-white dark:bg-zinc-900 overflow-hidden"
+                        className="md:hidden border-b bg-white overflow-hidden"
                     >
                         <div className="flex flex-col p-4 gap-4 text-center">
                             <Link href="#features" onClick={() => setIsMenuOpen(false)}>Como funciona</Link>
@@ -71,17 +71,17 @@ export default function LandingPage() {
                         variants={fadeIn}
                         className="space-y-6"
                     >
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-semibold mb-4 border border-blue-100 dark:border-blue-900/50">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-4 border border-blue-100">
                             <Star className="h-4 w-4 fill-current" />
                             <span>Seu Assistente Pessoal, só que muito mais eficiente.</span>
                         </div>
 
-                        <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-zinc-900 dark:text-white">
+                        <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-[1.1] text-zinc-900">
                             Controle toda a sua vida <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500">apenas falando.</span>
                         </h1>
 
-                        <p className="text-xl text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-xl text-zinc-500 max-w-2xl mx-auto leading-relaxed">
                             Esqueça planilhas complicadas e apps de agenda chatos. Com o Jarvis, você manda um áudio e tudo acontece magicamente.
                         </p>
 
@@ -89,7 +89,7 @@ export default function LandingPage() {
                             <Button size="lg" className="rounded-full text-lg px-8 h-12 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-transform hover:scale-105" asChild>
                                 <Link href="/login">Testar Grátis Agora <ArrowRight className="ml-2 h-5 w-5" /></Link>
                             </Button>
-                            <Button size="lg" variant="outline" className="rounded-full text-lg px-8 h-12 w-full sm:w-auto border-zinc-200 dark:border-zinc-800" asChild>
+                            <Button size="lg" variant="outline" className="rounded-full text-lg px-8 h-12 w-full sm:w-auto border-zinc-200" asChild>
                                 <Link href="#demo">Ver Vídeo</Link>
                             </Button>
                         </div>
@@ -113,7 +113,7 @@ export default function LandingPage() {
 
 
             {/* --- FEATURE 1: CALENDAR --- */}
-            <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
+            <section className="py-24 bg-zinc-50">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
                         <motion.div
@@ -123,11 +123,11 @@ export default function LandingPage() {
                             transition={{ duration: 0.6 }}
                             className="lg:w-1/2"
                         >
-                            <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-2xl w-fit mb-6">
-                                <CalendarIcon className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                            <div className="bg-orange-100 p-3 rounded-2xl w-fit mb-6">
+                                <CalendarIcon className="h-8 w-8 text-orange-600" />
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold mb-6">Agenda Inteligente</h2>
-                            <p className="text-xl text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8">
+                            <p className="text-xl text-zinc-500 leading-relaxed mb-8">
                                 &quot;Já pensou ter toda a sua agenda organizada apenas enviando uma mensagem de voz?&quot;
                             </p>
                             <ul className="space-y-4">
@@ -144,11 +144,11 @@ export default function LandingPage() {
                             transition={{ duration: 0.6 }}
                             className="lg:w-1/2 flex justify-center relative"
                         >
-                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-orange-200 to-transparent dark:from-orange-900/20 rounded-full blur-3xl opacity-50" />
+                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-orange-200 to-transparent rounded-full blur-3xl opacity-50" />
                             {/* Combined composition: Phone Mockup + User Photo */}
                             <div className="relative">
                                 <PhoneMockup type="calendar" className="z-20 relative shadow-2xl" />
-                                <div className="absolute -bottom-10 -right-20 z-10 w-48 h-64 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-900 hidden md:block">
+                                <div className="absolute -bottom-10 -right-20 z-10 w-48 h-64 rounded-2xl overflow-hidden shadow-xl border-4 border-white hidden md:block">
                                     <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop" alt="Pessoa feliz usando celular" className="w-full h-full object-cover" />
                                 </div>
                             </div>
@@ -168,10 +168,10 @@ export default function LandingPage() {
                             transition={{ duration: 0.6 }}
                             className="lg:w-1/2 flex justify-center relative"
                         >
-                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tl from-green-200 to-transparent dark:from-green-900/20 rounded-full blur-3xl opacity-50" />
+                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tl from-green-200 to-transparent rounded-full blur-3xl opacity-50" />
                             <div className="relative">
                                 <PhoneMockup type="finance" className="z-20 relative shadow-2xl" />
-                                <div className="absolute -top-10 -left-20 z-10 w-48 h-64 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-900 hidden md:block">
+                                <div className="absolute -top-10 -left-20 z-10 w-48 h-64 rounded-2xl overflow-hidden shadow-xl border-4 border-white hidden md:block">
                                     <img src="https://images.unsplash.com/photo-1574755866827-046645367566?q=80&w=800&auto=format&fit=crop" alt="Pessoa comprando café" className="w-full h-full object-cover" />
                                 </div>
                             </div>
@@ -184,11 +184,11 @@ export default function LandingPage() {
                             transition={{ duration: 0.6 }}
                             className="lg:w-1/2"
                         >
-                            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-2xl w-fit mb-6">
-                                <DollarSign className="h-8 w-8 text-green-600 dark:text-green-400" />
+                            <div className="bg-green-100 p-3 rounded-2xl w-fit mb-6">
+                                <DollarSign className="h-8 w-8 text-green-600" />
                             </div>
                             <h2 className="text-3xl md:text-5xl font-bold mb-6">Controle Financeiro</h2>
-                            <p className="text-xl text-zinc-500 dark:text-zinc-400 leading-relaxed mb-8">
+                            <p className="text-xl text-zinc-500 leading-relaxed mb-8">
                                 &quot;Controle seus gastos na palma da mão de forma simples e muito prática.&quot;
                             </p>
                             <ul className="space-y-4">
@@ -202,7 +202,7 @@ export default function LandingPage() {
             </section>
 
             {/* --- PRICING --- */}
-            <section id="pricing" className="py-24 bg-zinc-50 dark:bg-zinc-900/50">
+            <section id="pricing" className="py-24 bg-zinc-50">
                 <div className="container mx-auto px-4">
                     <div className="text-center max-w-2xl mx-auto mb-16">
                         <h2 className="text-3xl md:text-5xl font-bold mb-6">Preço de um cafézinho ☕</h2>
@@ -211,29 +211,29 @@ export default function LandingPage() {
 
                     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                         {/* Individual */}
-                        <div className="bg-white dark:bg-zinc-950 p-8 rounded-[2rem] shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg transition-all">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-zinc-200 hover:shadow-lg transition-all">
                             <h3 className="text-xl font-bold mb-2">Individual</h3>
                             <div className="flex items-baseline gap-1 mb-6">
                                 <span className="text-4xl font-extrabold">R$ 14,90</span>
                                 <span className="text-zinc-500">/mês</span>
                             </div>
                             <p className="text-sm text-zinc-500 mb-8">Para você organizar sua vida pessoal.</p>
-                            <Button className="w-full rounded-full h-12 text-base bg-zinc-100 text-zinc-900 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-white dark:hover:bg-zinc-700" asChild>
+                            <Button className="w-full rounded-full h-12 text-base bg-zinc-100 text-zinc-900 hover:bg-zinc-200" asChild>
                                 <Link href="/login">Escolher Individual</Link>
                             </Button>
                         </div>
 
                         {/* Family */}
-                        <div className="bg-black dark:bg-white p-8 rounded-[2rem] shadow-xl text-white dark:text-black relative transform md:-translate-y-4 border-4 border-blue-500/20">
+                        <div className="bg-black p-8 rounded-[2rem] shadow-xl text-white relative transform md:-translate-y-4 border-4 border-blue-500/20">
                             <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl rounded-tr-[1.5rem]">
                                 MAIS VANTAJOSO
                             </div>
                             <h3 className="text-xl font-bold mb-2">Família</h3>
                             <div className="flex items-baseline gap-1 mb-6">
                                 <span className="text-4xl font-extrabold">R$ 29,90</span>
-                                <span className="text-zinc-400 dark:text-zinc-600">/mês</span>
+                                <span className="text-zinc-400">/mês</span>
                             </div>
-                            <p className="text-sm text-zinc-400 dark:text-zinc-600 mb-8">Até 5 pessoas. Carteiras compartilhadas e agenda da casa.</p>
+                            <p className="text-sm text-zinc-400 mb-8">Até 5 pessoas. Carteiras compartilhadas e agenda da casa.</p>
                             <Button className="w-full rounded-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white border-none" asChild>
                                 <Link href="/login">Escolher Família</Link>
                             </Button>
@@ -249,7 +249,7 @@ export default function LandingPage() {
                         &quot;Eu perdia horas tentando lembrar onde gastei meu salário. Com o Jarvis, eu só falo no carro voltando do trabalho e pronto. Minha vida mudou.&quot;
                     </p>
                     <div className="mt-8 flex items-center justify-center gap-4">
-                        <div className="h-12 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center font-bold text-lg">M</div>
+                        <div className="h-12 w-12 rounded-full bg-zinc-200 flex items-center justify-center font-bold text-lg">M</div>
                         <div className="text-left">
                             <p className="font-bold text-sm">Marcos Silva</p>
                             <div className="flex text-yellow-500 h-4 w-4">
@@ -265,7 +265,7 @@ export default function LandingPage() {
             </section>
 
             {/* --- FAQ --- */}
-            <section id="faq" className="py-24 bg-zinc-50 dark:bg-zinc-900/30">
+            <section id="faq" className="py-24 bg-zinc-50">
                 <div className="container mx-auto px-4 max-w-3xl">
                     <h2 className="text-3xl font-bold mb-12 text-center">Perguntas Frequentes</h2>
                     <div className="space-y-4">
@@ -277,11 +277,11 @@ export default function LandingPage() {
             </section>
 
             {/* --- FOOTER --- */}
-            <footer className="py-12 border-t border-zinc-100 dark:border-zinc-800">
+            <footer className="py-12 border-t border-zinc-100">
                 <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-2">
-                        <div className="bg-zinc-900 dark:bg-zinc-100 p-1.5 rounded-lg">
-                            <Command className="h-4 w-4 text-white dark:text-black" />
+                        <div className="bg-zinc-900 p-1.5 rounded-lg">
+                            <Command className="h-4 w-4 text-white" />
                         </div>
                         <span className="font-bold">Jarvis</span>
                     </div>
@@ -302,10 +302,10 @@ export default function LandingPage() {
 function FeatureItem({ text }: { text: string }) {
     return (
         <li className="flex items-center gap-3">
-            <div className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center shrink-0">
+            <div className="h-6 w-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
                 <Check className="h-3.5 w-3.5" />
             </div>
-            <span className="text-lg text-zinc-600 dark:text-zinc-300">{text}</span>
+            <span className="text-lg text-zinc-600">{text}</span>
         </li>
     )
 }
@@ -314,7 +314,7 @@ function FaqItem({ q, a }: { q: string, a: string }) {
     const [isOpen, setIsOpen] = useState(false);
     return (
         <div
-            className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all"
+            className="bg-white border border-zinc-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all"
             onClick={() => setIsOpen(!isOpen)}
         >
             <div className="flex justify-between items-center font-bold text-lg">
@@ -325,7 +325,7 @@ function FaqItem({ q, a }: { q: string, a: string }) {
                 <motion.p
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
-                    className="mt-3 text-zinc-500 dark:text-zinc-400 leading-relaxed"
+                    className="mt-3 text-zinc-500 leading-relaxed"
                 >
                     {a}
                 </motion.p>
