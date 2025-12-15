@@ -16,7 +16,7 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
+        <div className="flex flex-col min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-100 selection:bg-blue-100 selection:text-blue-900">
 
             {/* --- COMPONENT: NAVBAR --- */}
             <header className="fixed top-0 w-full z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800">
