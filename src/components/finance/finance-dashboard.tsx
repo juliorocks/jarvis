@@ -41,6 +41,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Transaction } from "@/hooks/use-finance";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function FinanceDashboard() {
     const { wallets, transactions, categories, creditCards, loading, deleteTransaction } = useFinance();
@@ -354,7 +355,9 @@ export function FinanceDashboard() {
 
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 font-medium">Saldo em contas</p>
                         <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-                            {showBalance
+                            {loading ? (
+                                <Skeleton className="h-10 w-48 mx-auto" />
+                            ) : showBalance
                                 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalBalance)
                                 : "R$ •••••••"
                             }
@@ -377,7 +380,7 @@ export function FinanceDashboard() {
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Receitas</p>
                                     <p className="text-green-600 font-bold text-lg">
-                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeTotal) : "••••"}
+                                        {loading ? <Skeleton className="h-6 w-20" /> : showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(incomeTotal) : "••••"}
                                     </p>
                                 </div>
                             </div>
@@ -421,7 +424,7 @@ export function FinanceDashboard() {
                                 <div>
                                     <p className="text-xs text-gray-500 font-medium">Despesas</p>
                                     <p className="text-red-500 font-bold text-lg">
-                                        {showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseTotal) : "••••"}
+                                        {loading ? <Skeleton className="h-6 w-20 ml-auto" /> : showBalance ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(expenseTotal) : "••••"}
                                     </p>
                                 </div>
                             </div>
