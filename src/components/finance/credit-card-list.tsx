@@ -173,11 +173,17 @@ export function CreditCardList() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => openDialog(card)}>
+                                                <DropdownMenuItem onSelect={(e) => {
+                                                    e.preventDefault();
+                                                    openDialog(card);
+                                                }}>
                                                     <Edit className="mr-2 h-4 w-4" />
                                                     Editar
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-600" onClick={() => setDeletingId(card.id)}>
+                                                <DropdownMenuItem className="text-red-600" onSelect={(e) => {
+                                                    e.preventDefault();
+                                                    setDeletingId(card.id);
+                                                }}>
                                                     <Trash2 className="mr-2 h-4 w-4" />
                                                     Excluir
                                                 </DropdownMenuItem>

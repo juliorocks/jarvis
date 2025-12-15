@@ -9,7 +9,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 export default function DashboardLayout({ children }: { children: ReactNode }) {
     return (
         <FinanceProvider>
-            <div className="flex h-screen overflow-hidden bg-[#F2F4F8] dark:bg-zinc-950">
+            <div className="fixed inset-0 flex overflow-hidden bg-[#F2F4F8] dark:bg-zinc-950">
                 {/* Desktop Sidebar */}
                 <aside className="hidden md:block h-full">
                     <Sidebar />
