@@ -425,9 +425,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
     const updateCreditCard = async (card: CreditCard) => {
         try {
+            // Remove joined/calculated fields before update
+            const { current_invoice, ...rest } = card;
+
             const { data, error } = await supabase
                 .from('credit_cards')
-                .update(card)
+                .update(rest)
                 .eq('id', card.id)
                 .select()
                 .single()

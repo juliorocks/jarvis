@@ -136,8 +136,8 @@ export function CreditCardList() {
                                 <div key={card.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0 pt-2">
                                     <div className="flex items-center gap-4">
                                         {logo ? (
-                                            <div className="h-12 w-12 min-w-[3rem] rounded-full overflow-hidden bg-white shadow-sm border border-zinc-100 flex items-center justify-center p-0.5">
-                                                <img src={logo} alt={card.name} className="h-full w-full object-contain rounded-full" />
+                                            <div className="h-12 w-12 min-w-[3rem] rounded-full overflow-hidden bg-white shadow-sm border border-zinc-100 flex items-center justify-center">
+                                                <img src={logo} alt={card.name} className="h-full w-full object-cover" />
                                             </div>
                                         ) : (
                                             <div className="h-12 w-12 min-w-[3rem] rounded-full bg-zinc-100 flex items-center justify-center">
