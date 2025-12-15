@@ -72,8 +72,14 @@
   }
 
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
+    @apply bg-background text-foreground;
   }
+}
+
+html,
+body {
+  overflow-x: hidden;
+  height: 100%;
 }
 
 html {
