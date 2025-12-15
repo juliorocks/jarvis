@@ -142,9 +142,16 @@ export default function LandingPage() {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
-                            className="lg:w-1/2 flex justify-center"
+                            className="lg:w-1/2 flex justify-center relative"
                         >
-                            <PhoneMockup type="calendar" />
+                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tr from-orange-200 to-transparent dark:from-orange-900/20 rounded-full blur-3xl opacity-50" />
+                            {/* Combined composition: Phone Mockup + User Photo */}
+                            <div className="relative">
+                                <PhoneMockup type="calendar" className="z-20 relative shadow-2xl" />
+                                <div className="absolute -bottom-10 -right-20 z-10 w-48 h-64 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-900 hidden md:block">
+                                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=800&auto=format&fit=crop" alt="Pessoa feliz usando celular" className="w-full h-full object-cover" />
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
                 </div>
@@ -159,9 +166,15 @@ export default function LandingPage() {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
-                            className="lg:w-1/2 flex justify-center"
+                            className="lg:w-1/2 flex justify-center relative"
                         >
-                            <PhoneMockup type="finance" />
+                            <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-gradient-to-tl from-green-200 to-transparent dark:from-green-900/20 rounded-full blur-3xl opacity-50" />
+                            <div className="relative">
+                                <PhoneMockup type="finance" className="z-20 relative shadow-2xl" />
+                                <div className="absolute -top-10 -left-20 z-10 w-48 h-64 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-zinc-900 hidden md:block">
+                                    <img src="https://images.unsplash.com/photo-1574755866827-046645367566?q=80&w=800&auto=format&fit=crop" alt="Pessoa comprando café" className="w-full h-full object-cover" />
+                                </div>
+                            </div>
                         </motion.div>
 
                         <motion.div
